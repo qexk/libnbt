@@ -1,4 +1,7 @@
+SHELL			:=/bin/sh
 CURL			:=curl
+RM			:=rm -rf --
+PROVE			:=prove
 
 VENDOR_DIR		:=vendor/
 
@@ -12,6 +15,10 @@ CPPFLAGS		:=-I ${dir $(CATCH_HPP)}
 
 SRCS			:=
 
+.SUFFIXES:
+.SUFFIXES: .o .cpp
+
+%.t.o: $(CATCH_HPP)
 %.t:: %.t.o
 
 .PHONY: all
@@ -22,3 +29,15 @@ tests: $(CATCH_HPP) $(SRCS:.cpp=)
 
 $(CATCH_HPP):
 	$(CURL) '$(CATCH_URL)' -o $@ --create-dirs
+
+.PHONY: clean
+clean:
+	$(RM) $(SRCS:.cpp=)
+
+.PHONY: distclean
+distclean: clean
+	$(RM) $(VENDOR_DIR)
+
+.PHONY: check
+check:
+	@$(PROVE)
