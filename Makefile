@@ -27,7 +27,7 @@ endef
 CATCH_HPP		:=$(VENDOR_DIR)catchorg/Catch2/catch.hpp
 
 CXX			:=g++ -std=c++1z
-CPPFLAGS		:=-I ${dir $(CATCH_HPP)}
+CPPFLAGS		+=-I ${dir $(CATCH_HPP)}
 
 SRCS			:=
 
@@ -35,7 +35,6 @@ SRCS			:=
 .SUFFIXES: .o .cpp
 
 %.t.o: $(CATCH_HPP)
-%.t:: %.t.o
 
 .PHONY: all
 all: tests
