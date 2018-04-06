@@ -15,35 +15,37 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 SHELL			:=/bin/sh
-CURL			:=curl
 RM			:=rm -rf --
+CURL			:=curl -sS
 PROVE			:=prove
 
 VENDOR_DIR		:=vendor/
 
-define CATCH_URL
-https://raw.githubusercontent.com/catchorg/Catch2/master/single_include/catch.hpp
-endef
-CATCH_HPP		:=$(VENDOR_DIR)catchorg/Catch2/catch.hpp
+CATCH_DIR		:=$(VENDOR_DIR)catchorg/Catch2/
+CATCH_URL		:=https://raw.githubusercontent.com/catchorg/Catch2/master/single_include/
+CATCH_HPPS		:=${addprefix $(CATCH_DIR),\
+			  catch.hpp\
+			  catch_reporter_tap.hpp\
+			  }
 
 CXX			:=g++ -std=c++1z
-CPPFLAGS		+=-I ${dir $(CATCH_HPP)}
+CPPFLAGS		+=-I $(CATCH_DIR)
 
 SRCS			:=
 
 .SUFFIXES:
 .SUFFIXES: .o .cpp
 
-%.t.o: $(CATCH_HPP)
-
 .PHONY: all
 all: tests
 
 .PHONY: tests
-tests: $(CATCH_HPP) $(SRCS:.cpp=)
+tests: $(SRCS:.cpp=)
 
-$(CATCH_HPP):
-	$(CURL) '$(CATCH_URL)' -o $@ --create-dirs
+$(CATCH_DIR)%.hpp:
+	$(CURL) '$(CATCH_URL)$*.hpp' -o $@ --create-dirs
+
+$(SRCS:.cpp=): | $(CATCH_HPPS)
 
 .PHONY: clean
 clean:
