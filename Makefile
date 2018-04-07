@@ -20,6 +20,7 @@ CURL			:=curl -sS
 PROVE			:=prove
 
 VENDOR_DIR		:=vendor/
+INCLUDE_DIR		:=include/
 
 CATCH_DIR		:=$(VENDOR_DIR)catchorg/Catch2/
 CATCH_URL		:=https://raw.githubusercontent.com/catchorg/Catch2/master/single_include/
@@ -29,18 +30,25 @@ CATCH_HPPS		:=${addprefix $(CATCH_DIR),\
 			  }
 
 CXX			:=g++ -std=c++1z
-CPPFLAGS		+=-I $(CATCH_DIR)
+CPPFLAGS		+=-I $(CATCH_DIR) -I $(INCLUDE_DIR)
 
 SRCS			:=
 
 .SUFFIXES:
-.SUFFIXES: .o .cpp
+.SUFFIXES: .cpp
 
 .PHONY: all
 all: tests
 
 .PHONY: tests
 tests: $(SRCS:.cpp=)
+
+%.d:: %.t.cpp
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MM $< -MT $*.t \
+		| sed -E 's/\S+\.cpp//' > $@
+
+.PRECIOUS: $(SRCS:.t.cpp=.d)
+sinclude $(SRCS:.t.cpp=.d)
 
 $(CATCH_DIR)%.hpp:
 	$(CURL) '$(CATCH_URL)$*.hpp' -o $@ --create-dirs
@@ -49,7 +57,7 @@ $(SRCS:.cpp=): | $(CATCH_HPPS)
 
 .PHONY: clean
 clean:
-	$(RM) $(SRCS:.cpp=)
+	$(RM) $(SRCS:.cpp=) $(SRCS:.t.cpp=.d)
 
 .PHONY: distclean
 distclean: clean
