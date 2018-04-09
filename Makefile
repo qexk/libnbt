@@ -31,6 +31,7 @@ CATCH_HPPS		:=${addprefix $(CATCH_DIR),\
 
 CXX			:=g++ -std=c++1z
 CPPFLAGS		+=-I $(CATCH_DIR) -I $(INCLUDE_DIR)
+CXXFLAGS		:=-W -Wall -Werror -pedantic -Wno-multichar
 
 SRCS			:=
 
@@ -44,8 +45,8 @@ all: tests
 tests: $(SRCS:.cpp=)
 
 %.d:: %.t.cpp
-	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MM $< -MT $*.t \
-		| sed -E 's/\S+\.cpp//' > $@
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MM $< -MT $*.t.cpp \
+		| sed -E 's/\S+\.cpp//2' > $@
 
 .PRECIOUS: $(SRCS:.t.cpp=.d)
 sinclude $(SRCS:.t.cpp=.d)
