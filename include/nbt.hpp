@@ -173,6 +173,8 @@ parse
 	static constexpr typename _In_traits::int_type _Tag_sht{0x02};
 	static constexpr typename _In_traits::int_type _Tag_int{0x03};
 	static constexpr typename _In_traits::int_type _Tag_lng{0x04};
+	static constexpr typename _In_traits::int_type _Tag_flt{0x05};
+	static constexpr typename _In_traits::int_type _Tag_dbl{0x06};
 	std::unordered_map
 	<	detail::state
 	,	std::unordered_map<typename _In_traits::int_type, int>
@@ -183,6 +185,8 @@ parse
 			,	{ _Tag_sht, '2' }
 			,	{ _Tag_int, '3' }
 			,	{ _Tag_lng, '4' }
+			,	{ _Tag_flt, '5' }
+			,	{ _Tag_dbl, '6' }
 			}
 		}
 	};
@@ -247,6 +251,40 @@ loop:
 			_A::construct
 			(	__a, tmp
 			,	static_cast<_Long>(detail::b8tos64(buf))
+			);
+			ret.push(_Node_ptr(tmp));
+			break;
+		}
+	case '5':
+		{
+			ss.pop();
+			in.get();
+			_Node *tmp = _A::allocate(__a, 1);
+			_In_char buf[4];
+			in.read(buf, sizeof(buf));
+			auto repr = detail::b4tos32(buf);
+			_A::construct
+			(	__a, tmp
+			,	static_cast<_Float>
+				(	*reinterpret_cast<float *>(&repr)
+				)
+			);
+			ret.push(_Node_ptr(tmp));
+			break;
+		}
+	case '6':
+		{
+			ss.pop();
+			in.get();
+			_Node *tmp = _A::allocate(__a, 1);
+			_In_char buf[8];
+			in.read(buf, sizeof(buf));
+			auto repr = detail::b8tos64(buf);
+			_A::construct
+			(	__a, tmp
+			,	static_cast<_Double>
+				(	*reinterpret_cast<double *>(&repr)
+				)
 			);
 			ret.push(_Node_ptr(tmp));
 			break;
