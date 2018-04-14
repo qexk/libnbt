@@ -66,6 +66,50 @@ b2tos16(_Char const *buf)
 #endif
 }
 
+template <typename _Char>
+static inline std::int_least32_t
+b4tos32(_Char const *buf)
+{
+	return
+#if '\x11\x22\x33\x44' == 0x11'22'33'44
+		(static_cast<std::int_least32_t>(buf[0]) << 030) |
+		(static_cast<std::int_least32_t>(buf[1]) << 020) |
+		(static_cast<std::int_least32_t>(buf[2]) << 010) |
+		static_cast<std::int_least32_t>(buf[3]);
+#else
+		(static_cast<std::int_least32_t>(buf[3]) << 030) |
+		(static_cast<std::int_least32_t>(buf[2]) << 020) |
+		(static_cast<std::int_least32_t>(buf[1]) << 010) |
+		static_cast<std::int_least32_t>(buf[0]);
+#endif
+}
+
+template <typename _Char>
+static inline std::int_least64_t
+b8tos64(_Char const *buf)
+{
+	return
+#if '\x11\x22\x33\x44' == 0x11'22'33'44
+		(static_cast<std::int_least64_t>(buf[0]) << 070) |
+		(static_cast<std::int_least64_t>(buf[1]) << 060) |
+		(static_cast<std::int_least64_t>(buf[2]) << 050) |
+		(static_cast<std::int_least64_t>(buf[3]) << 040) |
+		(static_cast<std::int_least64_t>(buf[4]) << 030) |
+		(static_cast<std::int_least64_t>(buf[5]) << 020) |
+		(static_cast<std::int_least64_t>(buf[6]) << 010) |
+		static_cast<std::int_least64_t>(buf[7]);
+#else
+		(static_cast<std::int_least64_t>(buf[7]) << 070) |
+		(static_cast<std::int_least64_t>(buf[6]) << 060) |
+		(static_cast<std::int_least64_t>(buf[5]) << 050) |
+		(static_cast<std::int_least64_t>(buf[4]) << 040) |
+		(static_cast<std::int_least64_t>(buf[3]) << 030) |
+		(static_cast<std::int_least64_t>(buf[2]) << 020) |
+		(static_cast<std::int_least64_t>(buf[1]) << 010) |
+		static_cast<std::int_least64_t>(buf[0]);
+#endif
+}
+
 enum class state
 {	S
 ,	S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12
@@ -127,6 +171,8 @@ parse
 	using _In_traits = typename std::decay_t<decltype(in)>::traits_type;
 	static constexpr typename _In_traits::int_type _Tag_byt{0x01};
 	static constexpr typename _In_traits::int_type _Tag_sht{0x02};
+	static constexpr typename _In_traits::int_type _Tag_int{0x03};
+	static constexpr typename _In_traits::int_type _Tag_lng{0x04};
 	std::unordered_map
 	<	detail::state
 	,	std::unordered_map<typename _In_traits::int_type, int>
@@ -135,6 +181,8 @@ parse
 	,	{	detail::state::S
 		,	{	{ _Tag_byt, '1' }
 			,	{ _Tag_sht, '2' }
+			,	{ _Tag_int, '3' }
+			,	{ _Tag_lng, '4' }
 			}
 		}
 	};
@@ -167,8 +215,39 @@ loop:
 			in.get();
 			_Node *tmp = _A::allocate(__a, 1);
 			_In_char buf[2];
-			in.read(buf, 2U);
-			_A::construct(__a, tmp, (_Short)(detail::b2tos16(buf)));
+			in.read(buf, sizeof(buf));
+			_A::construct
+			(	__a, tmp
+			,	static_cast<_Short>(detail::b2tos16(buf))
+			);
+			ret.push(_Node_ptr(tmp));
+			break;
+		}
+	case '3':
+		{
+			ss.pop();
+			in.get();
+			_Node *tmp = _A::allocate(__a, 1);
+			_In_char buf[4];
+			in.read(buf, sizeof(buf));
+			_A::construct
+			(	__a, tmp
+			,	static_cast<_Int>(detail::b4tos32(buf))
+			);
+			ret.push(_Node_ptr(tmp));
+			break;
+		}
+	case '4':
+		{
+			ss.pop();
+			in.get();
+			_Node *tmp = _A::allocate(__a, 1);
+			_In_char buf[8];
+			in.read(buf, sizeof(buf));
+			_A::construct
+			(	__a, tmp
+			,	static_cast<_Long>(detail::b8tos64(buf))
+			);
 			ret.push(_Node_ptr(tmp));
 			break;
 		}
