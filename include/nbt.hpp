@@ -46,8 +46,8 @@ struct integer_list_hash
 	{
 		std::size_t _Seed = std::distance(l.cbegin(), l.cend());
 		for (auto const &_I : l)
-			_Seed ^= _I + 0x9e3779b9
-				+ (_Seed << 6) + (_Seed >> 2);
+			_Seed ^= _I + 0x9e3779b9 +
+				(_Seed << 6) + (_Seed >> 2);
 		return _Seed;
 	}
 };
@@ -56,10 +56,13 @@ template <typename _Char>
 static inline std::int_least16_t
 b2tos16(_Char const *buf)
 {
+	return
 #if '\x11\x22\x33\x44' == 0x11'22'33'44
-	return (buf[0] << 8) | buf[1];
+		(static_cast<std::int_least16_t>(buf[0]) << 010) |
+		static_cast<std::int_least16_t>(buf[1]);
 #else
-	return (buf[1] << 8) | buf[0];
+		(static_cast<std::int_least16_t>(buf[1]) << 010) |
+		static_cast<std::int_least16_t>(buf[0]);
 #endif
 }
 
@@ -151,7 +154,10 @@ loop:
 			ss.pop();
 			in.get();
 			_Node *tmp = _A::allocate(__a, 1);
-			_A::construct(__a, tmp, (_Byte)(in.get()));
+			_A::construct
+			(	__a, tmp
+			,	static_cast<_Byte>(in.get())
+			);
 			ret.push(_Node_ptr(tmp));
 			break;
 		}
