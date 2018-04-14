@@ -53,60 +53,60 @@ struct integer_list_hash
 };
 
 template <typename _Char>
-static inline std::int_least16_t
+static inline std::uint16_t
 b2tos16(_Char const *buf)
 {
 	return
 #if '\x11\x22\x33\x44' == 0x11'22'33'44
-		(static_cast<std::int_least16_t>(buf[0]) << 010) |
-		static_cast<std::int_least16_t>(buf[1]);
+		(static_cast<std::uint32_t>(buf[0]) << 010 & 0xFF00) |
+		(static_cast<std::uint32_t>(buf[1]) & 0x00FF);
 #else
-		(static_cast<std::int_least16_t>(buf[1]) << 010) |
-		static_cast<std::int_least16_t>(buf[0]);
+		(static_cast<std::uint32_t>(buf[1]) << 010 & 0xFF00) |
+		(static_cast<std::uint32_t>(buf[0]) & 0x00FF);
 #endif
 }
 
 template <typename _Char>
-static inline std::int_least32_t
+static inline std::uint32_t
 b4tos32(_Char const *buf)
 {
 	return
 #if '\x11\x22\x33\x44' == 0x11'22'33'44
-		(static_cast<std::int_least32_t>(buf[0]) << 030) |
-		(static_cast<std::int_least32_t>(buf[1]) << 020) |
-		(static_cast<std::int_least32_t>(buf[2]) << 010) |
-		static_cast<std::int_least32_t>(buf[3]);
+		(static_cast<std::uint32_t>(buf[0]) << 030 & 0xFF000000) |
+		(static_cast<std::uint32_t>(buf[1]) << 020 & 0x00FF0000) |
+		(static_cast<std::uint32_t>(buf[2]) << 010 & 0x0000FF00) |
+		(static_cast<std::uint32_t>(buf[3]) & 0x000000FF);
 #else
-		(static_cast<std::int_least32_t>(buf[3]) << 030) |
-		(static_cast<std::int_least32_t>(buf[2]) << 020) |
-		(static_cast<std::int_least32_t>(buf[1]) << 010) |
-		static_cast<std::int_least32_t>(buf[0]);
+		(static_cast<std::uint32_t>(buf[3]) << 030 & 0xFF000000) |
+		(static_cast<std::uint32_t>(buf[2]) << 020 & 0x00FF0000) |
+		(static_cast<std::uint32_t>(buf[1]) << 010 & 0x0000FF00) |
+		(static_cast<std::uint32_t>(buf[0]) & 0x000000FF);
 #endif
 }
 
 template <typename _Char>
-static inline std::int_least64_t
+static inline std::uint64_t
 b8tos64(_Char const *buf)
 {
 	return
 #if '\x11\x22\x33\x44' == 0x11'22'33'44
-		(static_cast<std::int_least64_t>(buf[0]) << 070) |
-		(static_cast<std::int_least64_t>(buf[1]) << 060) |
-		(static_cast<std::int_least64_t>(buf[2]) << 050) |
-		(static_cast<std::int_least64_t>(buf[3]) << 040) |
-		(static_cast<std::int_least64_t>(buf[4]) << 030) |
-		(static_cast<std::int_least64_t>(buf[5]) << 020) |
-		(static_cast<std::int_least64_t>(buf[6]) << 010) |
-		static_cast<std::int_least64_t>(buf[7]);
+		(static_cast<std::uint64_t>(buf[0]) << 070 & 0xFFL << 070) |
+		(static_cast<std::uint64_t>(buf[1]) << 060 & 0xFFL << 060) |
+		(static_cast<std::uint64_t>(buf[2]) << 050 & 0xFFL << 050) |
+		(static_cast<std::uint64_t>(buf[3]) << 040 & 0xFFL << 040) |
+		(static_cast<std::uint64_t>(buf[4]) << 030 & 0xFFL << 030) |
+		(static_cast<std::uint64_t>(buf[5]) << 020 & 0xFFL << 020) |
+		(static_cast<std::uint64_t>(buf[6]) << 010 & 0xFFL << 010) |
+		(static_cast<std::uint64_t>(buf[7]) & 0xFFL);
 #else
-		(static_cast<std::int_least64_t>(buf[7]) << 070) |
-		(static_cast<std::int_least64_t>(buf[6]) << 060) |
-		(static_cast<std::int_least64_t>(buf[5]) << 050) |
-		(static_cast<std::int_least64_t>(buf[4]) << 040) |
-		(static_cast<std::int_least64_t>(buf[3]) << 030) |
-		(static_cast<std::int_least64_t>(buf[2]) << 020) |
-		(static_cast<std::int_least64_t>(buf[1]) << 010) |
-		static_cast<std::int_least64_t>(buf[0]);
+		(static_cast<std::uint64_t>(buf[7]) << 070 & 0xFFL << 070) |
+		(static_cast<std::uint64_t>(buf[6]) << 060 & 0xFFL << 060) |
+		(static_cast<std::uint64_t>(buf[5]) << 050 & 0xFFL << 050) |
+		(static_cast<std::uint64_t>(buf[4]) << 040 & 0xFFL << 040) |
+		(static_cast<std::uint64_t>(buf[3]) << 030 & 0xFFL << 030) |
+		(static_cast<std::uint64_t>(buf[2]) << 020 & 0xFFL << 020) |
+		(static_cast<std::uint64_t>(buf[1]) << 010 & 0xFFL << 010) |
+		(static_cast<std::uint64_t>(buf[0]) & 0xFFL);
 #endif
 }
 
