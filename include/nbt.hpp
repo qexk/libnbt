@@ -262,6 +262,7 @@ parse
 			,	{ _Tag_bya,  '7' }
 			}
 		}
+	,	{ state::S2, {{ detail::_, '2A' }} }
 	,	{ state::S3, {{ detail::_, '3A' }} }
 	,	{ state::S7, {{ detail::_, '7A' }} }
 	};
@@ -287,9 +288,13 @@ loop:
 			goto loop;
 		}
 	case '2':
+		ss.pop();
+		in.get();
+		ss.push(state::S2);
+		goto loop;
+	case '2A':
 		{
 			ss.pop();
-			in.get();
 			_Node *node = _A::allocate(__a, 1);
 			_In_char buf[2];
 			in.read(buf, sizeof(buf));
