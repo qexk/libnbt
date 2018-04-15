@@ -161,6 +161,25 @@ struct default_map : public _Base
 
 static constexpr std::monostate _;
 
+template <typename T>
+static inline constexpr auto
+_Has_reserve(int)
+->	decltype(std::declval<T>().reserve(0), std::true_type{})
+{
+	return {};
+}
+
+template <typename T>
+static inline constexpr auto
+_Has_reserve(...)
+->	std::false_type
+{
+	return {};
+}
+
+template <typename T>
+static inline constexpr auto has_reserve = _Has_reserve<T>({});
+
 } // detail
 
 template
@@ -220,6 +239,7 @@ parse
 	static constexpr typename _In_traits::int_type _Tag_lng{0x04};
 	static constexpr typename _In_traits::int_type _Tag_flt{0x05};
 	static constexpr typename _In_traits::int_type _Tag_dbl{0x06};
+	static constexpr typename _In_traits::int_type _Tag_bya{0x07};
 	using detail::state;
 	std::unordered_map
 	<	state
@@ -233,9 +253,11 @@ parse
 			,	{ _Tag_lng,  '4' }
 			,	{ _Tag_flt,  '5' }
 			,	{ _Tag_dbl,  '6' }
+			,	{ _Tag_bya,  '7' }
 			}
 		}
 	,	{ state::S3, {{ detail::_, '3A' }} }
+	,	{ state::S7, {{ detail::_, '7A' }} }
 	};
 
 	std::stack<_Node_ptr> ret;
@@ -335,6 +357,34 @@ loop:
 				(	*reinterpret_cast<double *>(&repr)
 				)
 			);
+			ret.push(_Node_ptr(tmp));
+			goto loop;
+		}
+	case '7':
+		ss.pop();
+		in.get();
+		ss.push(state::S7);
+		ss.push(state::S3);
+		goto loop;
+	case '7A':
+		{
+			ss.pop();
+			auto const &count = std::get<2>(*ret.top());
+			auto buf = std::make_unique<_In_char>(count);
+			in.read(buf.get(), count);
+			_Byte_array_type cont;
+			if constexpr(detail::has_reserve<_Byte_array_type>)
+				cont.reserve(count);
+			std::copy
+			(	buf.get(), buf.get() + count
+			,	std::back_inserter(cont)
+			);
+			_Node *tmp = _A::allocate(__a, 1);
+			_A::construct
+			(	__a, tmp
+			,	cont
+			);
+			ret.pop();
 			ret.push(_Node_ptr(tmp));
 			goto loop;
 		}
