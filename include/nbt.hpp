@@ -375,20 +375,20 @@ loop:
 	case '7A':
 		{
 			ss.pop();
-			auto const &count = std::get<2>(*ret.top());
-			auto buf = std::make_unique<_In_char>(count);
-			in.read(buf.get(), count);
+			auto const &len = std::get<2>(*ret.top());
+			auto const buf = std::make_unique<_In_char[]>(len);
+			in.read(buf.get(), len);
 			_Byte_array_type cont;
 			if constexpr(detail::has_reserve<_Byte_array_type>)
-				cont.reserve(count);
+				cont.reserve(len);
 			std::copy
-			(	buf.get(), buf.get() + count
+			(	buf.get(), buf.get() + len
 			,	std::back_inserter(cont)
 			);
-			_Node *node = _A::allocate(__a, 1);
+			_Node * const node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
-			,	cont
+			,	std::move(cont)
 			);
 			ret.pop();
 			ret.push(_Node_ptr(node));
