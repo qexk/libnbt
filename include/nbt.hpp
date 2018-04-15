@@ -162,7 +162,7 @@ template
 >
 std::unique_ptr<_Node>
 parse
-(	std::basic_istream<_In_char> &&in
+(	std::basic_istream<_In_char> &in
 ,	_Allocator<_Node> __a = _Allocator<_Node>()
 )
 {
@@ -175,32 +175,31 @@ parse
 	static constexpr typename _In_traits::int_type _Tag_lng{0x04};
 	static constexpr typename _In_traits::int_type _Tag_flt{0x05};
 	static constexpr typename _In_traits::int_type _Tag_dbl{0x06};
+	using detail::state;
 	std::unordered_map
-	<	detail::state
+	<	state
 	,	std::unordered_map<typename _In_traits::int_type, int>
 	> const trans =
-	{	{ detail::state::F, {{ _In_traits::eof(), '0' }} }
-	,	{	detail::state::S
-		,	{	{ _Tag_byt, '1' }
-			,	{ _Tag_sht, '2' }
-			,	{ _Tag_int, '3' }
-			,	{ _Tag_lng, '4' }
-			,	{ _Tag_flt, '5' }
-			,	{ _Tag_dbl, '6' }
+	{	{ state::F, {{ _In_traits::eof(), '0' }} }
+	,	{	state::S
+		,	{	{ _Tag_byt,  '1' }
+			,	{ _Tag_sht,  '2' }
+			,	{ _Tag_int,  '3' }
+			,	{ _Tag_lng,  '4' }
+			,	{ _Tag_flt,  '5' }
+			,	{ _Tag_dbl,  '6' }
 			}
 		}
 	};
 
 	std::stack<_Node_ptr> ret;
-	std::stack<detail::state> ss;
-	ss.push(detail::state::F);
-	ss.push(detail::state::S);
+	std::stack<state> ss;
+	ss.push(state::F);
+	ss.push(state::S);
 
 loop:
 	switch (trans.at(ss.top()).at(in.peek()))
 	{
-	case '0':
-		goto end;
 	case '1':
 		{
 			ss.pop();
@@ -211,7 +210,7 @@ loop:
 			,	static_cast<_Byte>(in.get())
 			);
 			ret.push(_Node_ptr(tmp));
-			break;
+			goto loop;
 		}
 	case '2':
 		{
@@ -225,7 +224,7 @@ loop:
 			,	static_cast<_Short>(detail::b2tos16(buf))
 			);
 			ret.push(_Node_ptr(tmp));
-			break;
+			goto loop;
 		}
 	case '3':
 		{
@@ -239,7 +238,7 @@ loop:
 			,	static_cast<_Int>(detail::b4tos32(buf))
 			);
 			ret.push(_Node_ptr(tmp));
-			break;
+			goto loop;
 		}
 	case '4':
 		{
@@ -253,7 +252,7 @@ loop:
 			,	static_cast<_Long>(detail::b8tos64(buf))
 			);
 			ret.push(_Node_ptr(tmp));
-			break;
+			goto loop;
 		}
 	case '5':
 		{
@@ -270,7 +269,7 @@ loop:
 				)
 			);
 			ret.push(_Node_ptr(tmp));
-			break;
+			goto loop;
 		}
 	case '6':
 		{
@@ -287,10 +286,11 @@ loop:
 				)
 			);
 			ret.push(_Node_ptr(tmp));
-			break;
+			goto loop;
 		}
+	case '0':
+		goto end;
 	}
-	goto loop;
 end:
 	return std::move(ret.top());
 }
