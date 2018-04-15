@@ -233,6 +233,7 @@ parse
 	using _Node_ptr = std::unique_ptr<_Node>;
 	using _A = typename std::allocator_traits<_Allocator<_Node>>;
 	using _In_traits = typename std::decay_t<decltype(in)>::traits_type;
+	// static constexpr typename _In_traits::int_type _Tag_nul{0x00};
 	static constexpr typename _In_traits::int_type _Tag_byt{0x01};
 	static constexpr typename _In_traits::int_type _Tag_sht{0x02};
 	static constexpr typename _In_traits::int_type _Tag_int{0x03};
@@ -240,6 +241,11 @@ parse
 	static constexpr typename _In_traits::int_type _Tag_flt{0x05};
 	static constexpr typename _In_traits::int_type _Tag_dbl{0x06};
 	static constexpr typename _In_traits::int_type _Tag_bya{0x07};
+	// static constexpr typename _In_traits::int_type _Tag_str{0x08};
+	// static constexpr typename _In_traits::int_type _Tag_lst{0x09};
+	// static constexpr typename _In_traits::int_type _Tag_cpd{0x0A};
+	// static constexpr typename _In_traits::int_type _Tag_ina{0x0B};
+	// static constexpr typename _In_traits::int_type _Tag_lna{0x0C};
 	using detail::state;
 	std::unordered_map
 	<	state
@@ -272,26 +278,26 @@ loop:
 		{
 			ss.pop();
 			in.get();
-			_Node *tmp = _A::allocate(__a, 1);
+			_Node *node = _A::allocate(__a, 1);
 			_A::construct
-			(	__a, tmp
+			(	__a, node
 			,	static_cast<_Byte>(in.get())
 			);
-			ret.push(_Node_ptr(tmp));
+			ret.push(_Node_ptr(node));
 			goto loop;
 		}
 	case '2':
 		{
 			ss.pop();
 			in.get();
-			_Node *tmp = _A::allocate(__a, 1);
+			_Node *node = _A::allocate(__a, 1);
 			_In_char buf[2];
 			in.read(buf, sizeof(buf));
 			_A::construct
-			(	__a, tmp
+			(	__a, node
 			,	static_cast<_Short>(detail::b2tos16(buf))
 			);
-			ret.push(_Node_ptr(tmp));
+			ret.push(_Node_ptr(node));
 			goto loop;
 		}
 	case '3':
@@ -302,62 +308,62 @@ loop:
 	case '3A':
 		{
 			ss.pop();
-			_Node *tmp = _A::allocate(__a, 1);
+			_Node *node = _A::allocate(__a, 1);
 			_In_char buf[4];
 			in.read(buf, sizeof(buf));
 			_A::construct
-			(	__a, tmp
+			(	__a, node
 			,	static_cast<_Int>(detail::b4tos32(buf))
 			);
-			ret.push(_Node_ptr(tmp));
+			ret.push(_Node_ptr(node));
 			goto loop;
 		}
 	case '4':
 		{
 			ss.pop();
 			in.get();
-			_Node *tmp = _A::allocate(__a, 1);
+			_Node *node = _A::allocate(__a, 1);
 			_In_char buf[8];
 			in.read(buf, sizeof(buf));
 			_A::construct
-			(	__a, tmp
+			(	__a, node
 			,	static_cast<_Long>(detail::b8tos64(buf))
 			);
-			ret.push(_Node_ptr(tmp));
+			ret.push(_Node_ptr(node));
 			goto loop;
 		}
 	case '5':
 		{
 			ss.pop();
 			in.get();
-			_Node *tmp = _A::allocate(__a, 1);
+			_Node *node = _A::allocate(__a, 1);
 			_In_char buf[4];
 			in.read(buf, sizeof(buf));
 			auto repr = detail::b4tos32(buf);
 			_A::construct
-			(	__a, tmp
+			(	__a, node
 			,	static_cast<_Float>
 				(	*reinterpret_cast<float *>(&repr)
 				)
 			);
-			ret.push(_Node_ptr(tmp));
+			ret.push(_Node_ptr(node));
 			goto loop;
 		}
 	case '6':
 		{
 			ss.pop();
 			in.get();
-			_Node *tmp = _A::allocate(__a, 1);
+			_Node *node = _A::allocate(__a, 1);
 			_In_char buf[8];
 			in.read(buf, sizeof(buf));
 			auto repr = detail::b8tos64(buf);
 			_A::construct
-			(	__a, tmp
+			(	__a, node
 			,	static_cast<_Double>
 				(	*reinterpret_cast<double *>(&repr)
 				)
 			);
-			ret.push(_Node_ptr(tmp));
+			ret.push(_Node_ptr(node));
 			goto loop;
 		}
 	case '7':
@@ -379,13 +385,13 @@ loop:
 			(	buf.get(), buf.get() + count
 			,	std::back_inserter(cont)
 			);
-			_Node *tmp = _A::allocate(__a, 1);
+			_Node *node = _A::allocate(__a, 1);
 			_A::construct
-			(	__a, tmp
+			(	__a, node
 			,	cont
 			);
 			ret.pop();
-			ret.push(_Node_ptr(tmp));
+			ret.push(_Node_ptr(node));
 			goto loop;
 		}
 	case '0':
