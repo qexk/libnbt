@@ -20,6 +20,7 @@
 #ifndef NBT_H_
 # define NBT_H_
 
+# include <algorithm>
 # include <istream>
 # include <memory>
 # include <limits>
@@ -116,6 +117,50 @@ enum class state
 ,	F
 };
 
+template
+<	class _Key_real
+,	class _Value
+,	class _Key = std::variant<std::monostate, _Key_real>
+,	class _Hash = std::hash<_Key>
+,	class _Equal = std::equal_to<_Key>
+,	class _Allocator = std::allocator<std::pair<_Key const, _Value>>
+,	class _Base = std::unordered_map
+	<	_Key
+	,	_Value
+	,	_Hash
+	,	_Equal
+	,	_Allocator
+	>
+>
+struct default_map : public _Base
+{
+	using _Base::unordered_map;
+
+	virtual _Value &
+	at(_Key_real const &key)
+	{
+		if (auto it = _Base::find(key); it != _Base::end())
+			return it->second;
+		else
+			return _Base::at(std::monostate());
+	}
+
+	virtual _Value const &
+	at(_Key_real const &key) const
+	{
+		if (auto it = _Base::find(key); it != _Base::cend())
+			return it->second;
+		else
+			return _Base::at(std::monostate());
+	}
+
+	virtual
+	~default_map()
+	{}
+};
+
+static constexpr std::monostate _;
+
 } // detail
 
 template
@@ -178,7 +223,7 @@ parse
 	using detail::state;
 	std::unordered_map
 	<	state
-	,	std::unordered_map<typename _In_traits::int_type, int>
+	,	detail::default_map<typename _In_traits::int_type, int>
 	> const trans =
 	{	{ state::F, {{ _In_traits::eof(), '0' }} }
 	,	{	state::S
@@ -190,6 +235,7 @@ parse
 			,	{ _Tag_dbl,  '6' }
 			}
 		}
+	,	{ state::S3, {{ detail::_, '3A' }} }
 	};
 
 	std::stack<_Node_ptr> ret;
@@ -227,9 +273,13 @@ loop:
 			goto loop;
 		}
 	case '3':
+		ss.pop();
+		in.get();
+		ss.push(state::S3);
+		goto loop;
+	case '3A':
 		{
 			ss.pop();
-			in.get();
 			_Node *tmp = _A::allocate(__a, 1);
 			_In_char buf[4];
 			in.read(buf, sizeof(buf));
