@@ -114,6 +114,7 @@ b8tos64(_Char const *buf)
 enum class state
 {	S
 ,	S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12
+,	S8A
 ,	F
 };
 
@@ -241,7 +242,7 @@ parse
 	static constexpr typename _In_traits::int_type _Tag_flt{0x05};
 	static constexpr typename _In_traits::int_type _Tag_dbl{0x06};
 	static constexpr typename _In_traits::int_type _Tag_bya{0x07};
-	// static constexpr typename _In_traits::int_type _Tag_str{0x08};
+	static constexpr typename _In_traits::int_type _Tag_str{0x08};
 	// static constexpr typename _In_traits::int_type _Tag_lst{0x09};
 	// static constexpr typename _In_traits::int_type _Tag_cpd{0x0A};
 	// static constexpr typename _In_traits::int_type _Tag_ina{0x0B};
@@ -260,11 +261,14 @@ parse
 			,	{ _Tag_flt,  '5' }
 			,	{ _Tag_dbl,  '6' }
 			,	{ _Tag_bya,  '7' }
+			,	{ _Tag_str,  '8' }
 			}
 		}
-	,	{ state::S2, {{ detail::_, '2A' }} }
-	,	{ state::S3, {{ detail::_, '3A' }} }
-	,	{ state::S7, {{ detail::_, '7A' }} }
+	,	{ state::S2,  {{ detail::_, '2A' }} }
+	,	{ state::S3,  {{ detail::_, '3A' }} }
+	,	{ state::S7,  {{ detail::_, '7A' }} }
+	,	{ state::S8,  {{ detail::_, '8A' }} }
+	,	{ state::S8A, {{ detail::_, '8B' }} }
 	};
 
 	std::stack<_Node_ptr> ret;
@@ -385,6 +389,38 @@ loop:
 			in.read(buf.get(), len);
 			_Byte_array_type cont;
 			if constexpr(detail::has_reserve<_Byte_array_type>)
+				cont.reserve(len);
+			std::copy
+			(	buf.get(), buf.get() + len
+			,	std::back_inserter(cont)
+			);
+			_Node * const node = _A::allocate(__a, 1);
+			_A::construct
+			(	__a, node
+			,	std::move(cont)
+			);
+			ret.pop();
+			ret.push(_Node_ptr(node));
+			goto loop;
+		}
+	case '8':
+		ss.pop();
+		in.get();
+		ss.push(state::S8);
+		goto loop;
+	case '8A':
+		ss.pop();
+		ss.push(state::S8A);
+		ss.push(state::S2);
+		goto loop;
+	case '8B':
+		{
+			ss.pop();
+			std::size_t const len = std::get<1>(*ret.top());
+			auto const buf = std::make_unique<_In_char[]>(len);
+			in.read(buf.get(), len);
+			_String_type cont;
+			if constexpr(detail::has_reserve<_String_type>)
 				cont.reserve(len);
 			std::copy
 			(	buf.get(), buf.get() + len
