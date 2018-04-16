@@ -184,8 +184,7 @@ static inline constexpr auto has_reserve = _Has_reserve<T>({});
 } // detail
 
 template
-<	typename _In_char = char
-,	template <class> typename _Allocator = std::allocator
+<	template <class> typename _Allocator = std::allocator
 ,	typename _Char = char
 ,	typename _Byte = std::int_least8_t
 ,	typename _Short = std::int_least16_t
@@ -224,6 +223,7 @@ template
 	,	_Byte_array_type, _String_type, _List_type, _Compound_type
 	,	_Int_array_type, _Long_array_type
 	>
+,	typename _In_char = char
 >
 std::unique_ptr<_Node>
 parse
