@@ -272,7 +272,7 @@ parse
 	using _Node_ptr = std::unique_ptr<_Node>;
 	using _A = typename std::allocator_traits<_Allocator<_Node>>;
 	using _In_traits = typename std::decay_t<decltype(in)>::traits_type;
-	// static constexpr typename _In_traits::int_type _Tag_nul{0x00};
+	static constexpr typename _In_traits::int_type _Tag_nul{0x00};
 	static constexpr typename _In_traits::int_type _Tag_byt{0x01};
 	static constexpr typename _In_traits::int_type _Tag_sht{0x02};
 	static constexpr typename _In_traits::int_type _Tag_int{0x03};
@@ -533,11 +533,14 @@ loop:
 		}
 	case '9B':
 		{
-			//TODO: corner cases like 0 length or NUL tag
 			ss.pop();
-			auto const &tag = std::get<0>(**++ret_raw.rbegin());
-			ss.push(state::S9B);
-			ss.push(detail::state_of_tag(tag));
+			auto const &count = std::get<2>(*ret.front());
+			auto const &tag = std::get<0>(*ret[1]);
+			if (count > 0 && tag != _Tag_nul)
+			{
+				ss.push(state::S9B);
+				ss.push(detail::state_of_tag(tag));
+			}
 			goto loop;
 		}
 	case '9C':
