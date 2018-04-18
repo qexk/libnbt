@@ -141,21 +141,6 @@ state_of_tag(_In_char const tag)
 	}
 }
 
-template <class _Container>
-static inline auto &
-get_c(_Container &c)
-{
-	struct injector : public _Container
-	{
-		static inline typename _Container::container_type &
-		get_c(_Container &c)
-		{
-			return c.*(&injector::c);
-		}
-	};
-	return injector::get_c(c);
-}
-
 template
 <	class _Key_real
 ,	class _Value
