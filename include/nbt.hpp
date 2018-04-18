@@ -113,8 +113,8 @@ b8tos64(_Char const *buf)
 
 enum class state
 {	S
-,	S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12
-,	S8A
+,	S1, S2, S3, S4, S5, S6, S7, S8, S9, SA, SB, SC
+,	S7A, S8A
 ,	F
 };
 
@@ -264,9 +264,14 @@ parse
 			,	{ _Tag_str,  '8' }
 			}
 		}
+	,	{ state::S1,  {{ detail::_, '1A' }} }
 	,	{ state::S2,  {{ detail::_, '2A' }} }
 	,	{ state::S3,  {{ detail::_, '3A' }} }
+	,	{ state::S4,  {{ detail::_, '4A' }} }
+	,	{ state::S5,  {{ detail::_, '5A' }} }
+	,	{ state::S6,  {{ detail::_, '6A' }} }
 	,	{ state::S7,  {{ detail::_, '7A' }} }
+	,	{ state::S7A, {{ detail::_, '7B' }} }
 	,	{ state::S8,  {{ detail::_, '8A' }} }
 	,	{ state::S8A, {{ detail::_, '8B' }} }
 	};
@@ -280,9 +285,13 @@ loop:
 	switch (trans.at(ss.top()).at(in.peek()))
 	{
 	case '1':
+		ss.pop();
+		in.get();
+		ss.push(state::S1);
+		goto loop;
+	case '1A':
 		{
 			ss.pop();
-			in.get();
 			_Node *node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
@@ -328,6 +337,11 @@ loop:
 			goto loop;
 		}
 	case '4':
+		ss.pop();
+		in.get();
+		ss.push(state::S4);
+		goto loop;
+	case '4A':
 		{
 			ss.pop();
 			in.get();
@@ -342,6 +356,11 @@ loop:
 			goto loop;
 		}
 	case '5':
+		ss.pop();
+		in.get();
+		ss.push(state::S5);
+		goto loop;
+	case '5A':
 		{
 			ss.pop();
 			in.get();
@@ -359,6 +378,11 @@ loop:
 			goto loop;
 		}
 	case '6':
+		ss.pop();
+		in.get();
+		ss.push(state::S6);
+		goto loop;
+	case '6A':
 		{
 			ss.pop();
 			in.get();
@@ -379,9 +403,13 @@ loop:
 		ss.pop();
 		in.get();
 		ss.push(state::S7);
-		ss.push(state::S3);
 		goto loop;
 	case '7A':
+		ss.pop();
+		ss.push(state::S7A);
+		ss.push(state::S3);
+		goto loop;
+	case '7B':
 		{
 			ss.pop();
 			auto const &len = std::get<2>(*ret.top());
