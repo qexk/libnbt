@@ -114,9 +114,47 @@ b8tos64(_Char const *buf)
 enum class state
 {	S
 ,	S1, S2, S3, S4, S5, S6, S7, S8, S9, SA, SB, SC
-,	S7A, S8A
+,	S7A, S8A, S9A
+,	S9B
 ,	F
 };
+
+template <typename _In_char>
+static inline state
+state_of_tag(_In_char const tag)
+{
+	switch (static_cast<unsigned>(tag))
+	{
+	case 0x01U: return state::S1;
+	case 0x02U: return state::S2;
+	case 0x03U: return state::S3;
+	case 0x04U: return state::S4;
+	case 0x05U: return state::S5;
+	case 0x06U: return state::S6;
+	case 0x07U: return state::S7;
+	case 0x08U: return state::S8;
+	case 0x09U: return state::S9;
+	case 0x0AU: return state::SA;
+	case 0x0BU: return state::SB;
+	case 0x0CU: return state::SC;
+	default:   return state::F;
+	}
+}
+
+template <class _Container>
+static inline auto &
+get_c(_Container &c)
+{
+	struct injector : public _Container
+	{
+		static inline typename _Container::container_type &
+		get_c(_Container &c)
+		{
+			return c.*(&injector::c);
+		}
+	};
+	return injector::get_c(c);
+}
 
 template
 <	class _Key_real
@@ -243,7 +281,7 @@ parse
 	static constexpr typename _In_traits::int_type _Tag_dbl{0x06};
 	static constexpr typename _In_traits::int_type _Tag_bya{0x07};
 	static constexpr typename _In_traits::int_type _Tag_str{0x08};
-	// static constexpr typename _In_traits::int_type _Tag_lst{0x09};
+	static constexpr typename _In_traits::int_type _Tag_lst{0x09};
 	// static constexpr typename _In_traits::int_type _Tag_cpd{0x0A};
 	// static constexpr typename _In_traits::int_type _Tag_ina{0x0B};
 	// static constexpr typename _In_traits::int_type _Tag_lna{0x0C};
@@ -262,6 +300,7 @@ parse
 			,	{ _Tag_dbl,  '6' }
 			,	{ _Tag_bya,  '7' }
 			,	{ _Tag_str,  '8' }
+			,	{ _Tag_lst,  '9' }
 			}
 		}
 	,	{ state::S1,  {{ detail::_, '1A' }} }
@@ -274,9 +313,20 @@ parse
 	,	{ state::S7A, {{ detail::_, '7B' }} }
 	,	{ state::S8,  {{ detail::_, '8A' }} }
 	,	{ state::S8A, {{ detail::_, '8B' }} }
+	,	{ state::S9,  {{ detail::_, '9A' }} }
+	,	{ state::S9A, {{ detail::_, '9B' }} }
+	,	{ state::S9B, {{ detail::_, '9C' }} }
+	};
+
+	auto deleter = [] (void *ptr_raw) {
+		static auto __a = _Allocator<_Node>();
+		auto ptr = reinterpret_cast<_Node *>(ptr_raw);
+		_A::destroy(__a, ptr);
+		_A::deallocate(__a, ptr, 1);
 	};
 
 	std::stack<_Node_ptr> ret;
+	auto &ret_raw = detail::get_c(ret);
 	std::stack<state> ss;
 	ss.push(state::F);
 	ss.push(state::S);
@@ -461,6 +511,59 @@ loop:
 			);
 			ret.pop();
 			ret.push(_Node_ptr(node));
+			goto loop;
+		}
+	case '9':
+		ss.pop();
+		in.get();
+		ss.push(state::S9);
+		goto loop;
+	case '9A':
+		{
+			ss.pop();
+			ss.push(state::S9A);
+			ss.push(state::S3);
+			ss.push(state::S1);
+			_Node * const node = _A::allocate(__a, 1);
+			_A::construct
+			(	__a, node
+			,	_List_type()
+			);
+			ret.push(_Node_ptr(node));
+			goto loop;
+		}
+	case '9B':
+		{
+			//TODO: corner cases like 0 length or NUL tag
+			ss.pop();
+			auto const &tag = std::get<0>(**++ret_raw.rbegin());
+			ss.push(state::S9B);
+			ss.push(detail::state_of_tag(tag));
+			goto loop;
+		}
+	case '9C':
+		{
+			ss.pop();
+			volatile auto const len = ret_raw.size();
+			auto &count = std::get<2>(*ret_raw[len - 2]);
+			auto const &tag = std::get<0>(*ret_raw[len - 3]);
+			std::get<8>(*ret_raw[len - 4]).emplace_back
+			(	reinterpret_cast<void *>
+				(	ret_raw[len - 1].release()
+				)
+			,	deleter
+			);
+			ret.pop();
+			if (--count > 0)
+			{
+				ss.push(state::S9B);
+				ss.push(detail::state_of_tag(tag));
+			}
+			else
+			{
+				ret.pop();
+				ret.pop();
+			}
 			goto loop;
 		}
 	case '0':
