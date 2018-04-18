@@ -325,8 +325,7 @@ parse
 		_A::deallocate(__a, ptr, 1);
 	};
 
-	std::stack<_Node_ptr> ret;
-	auto &ret_raw = detail::get_c(ret);
+	std::deque<_Node_ptr> ret;
 	std::stack<state> ss;
 	ss.push(state::F);
 	ss.push(state::S);
@@ -347,7 +346,7 @@ loop:
 			(	__a, node
 			,	static_cast<_Byte>(in.get())
 			);
-			ret.push(_Node_ptr(node));
+			ret.push_front(_Node_ptr(node));
 			goto loop;
 		}
 	case '2':
@@ -365,7 +364,7 @@ loop:
 			(	__a, node
 			,	static_cast<_Short>(detail::b2tos16(buf))
 			);
-			ret.push(_Node_ptr(node));
+			ret.push_front(_Node_ptr(node));
 			goto loop;
 		}
 	case '3':
@@ -383,7 +382,7 @@ loop:
 			(	__a, node
 			,	static_cast<_Int>(detail::b4tos32(buf))
 			);
-			ret.push(_Node_ptr(node));
+			ret.push_front(_Node_ptr(node));
 			goto loop;
 		}
 	case '4':
@@ -402,7 +401,7 @@ loop:
 			(	__a, node
 			,	static_cast<_Long>(detail::b8tos64(buf))
 			);
-			ret.push(_Node_ptr(node));
+			ret.push_front(_Node_ptr(node));
 			goto loop;
 		}
 	case '5':
@@ -424,7 +423,7 @@ loop:
 				(	*reinterpret_cast<float *>(&repr)
 				)
 			);
-			ret.push(_Node_ptr(node));
+			ret.push_front(_Node_ptr(node));
 			goto loop;
 		}
 	case '6':
@@ -446,7 +445,7 @@ loop:
 				(	*reinterpret_cast<double *>(&repr)
 				)
 			);
-			ret.push(_Node_ptr(node));
+			ret.push_front(_Node_ptr(node));
 			goto loop;
 		}
 	case '7':
@@ -462,7 +461,7 @@ loop:
 	case '7B':
 		{
 			ss.pop();
-			auto const &len = std::get<2>(*ret.top());
+			auto const &len = std::get<2>(*ret.front());
 			auto const buf = std::make_unique<_In_char[]>(len);
 			in.read(buf.get(), len);
 			_Byte_array_type cont;
@@ -477,8 +476,8 @@ loop:
 			(	__a, node
 			,	std::move(cont)
 			);
-			ret.pop();
-			ret.push(_Node_ptr(node));
+			ret.pop_front();
+			ret.push_front(_Node_ptr(node));
 			goto loop;
 		}
 	case '8':
@@ -494,7 +493,7 @@ loop:
 	case '8B':
 		{
 			ss.pop();
-			std::size_t const len = std::get<1>(*ret.top());
+			std::size_t const len = std::get<1>(*ret.front());
 			auto const buf = std::make_unique<_In_char[]>(len);
 			in.read(buf.get(), len);
 			_String_type cont;
@@ -509,8 +508,8 @@ loop:
 			(	__a, node
 			,	std::move(cont)
 			);
-			ret.pop();
-			ret.push(_Node_ptr(node));
+			ret.pop_front();
+			ret.push_front(_Node_ptr(node));
 			goto loop;
 		}
 	case '9':
@@ -529,7 +528,7 @@ loop:
 			(	__a, node
 			,	_List_type()
 			);
-			ret.push(_Node_ptr(node));
+			ret.push_front(_Node_ptr(node));
 			goto loop;
 		}
 	case '9B':
@@ -544,16 +543,15 @@ loop:
 	case '9C':
 		{
 			ss.pop();
-			volatile auto const len = ret_raw.size();
-			auto &count = std::get<2>(*ret_raw[len - 2]);
-			auto const &tag = std::get<0>(*ret_raw[len - 3]);
-			std::get<8>(*ret_raw[len - 4]).emplace_back
+			auto &count = std::get<2>(*ret[1]);
+			auto const &tag = std::get<0>(*ret[2]);
+			std::get<8>(*ret[3]).emplace_back
 			(	reinterpret_cast<void *>
-				(	ret_raw[len - 1].release()
+				(	ret.front().release()
 				)
 			,	deleter
 			);
-			ret.pop();
+			ret.pop_front();
 			if (--count > 0)
 			{
 				ss.push(state::S9B);
@@ -561,8 +559,8 @@ loop:
 			}
 			else
 			{
-				ret.pop();
-				ret.pop();
+				ret.pop_front();
+				ret.pop_front();
 			}
 			goto loop;
 		}
@@ -570,7 +568,7 @@ loop:
 		goto end;
 	}
 end:
-	return std::move(ret.top());
+	return std::move(ret.front());
 }
 
 } // nbt
