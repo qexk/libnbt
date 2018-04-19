@@ -115,7 +115,8 @@ enum class state
 {	S
 ,	S1, S2, S3, S4, S5, S6, S7, S8, S9, SA, SB, SC
 ,	S7A, S8A, S9A
-,	S9B
+,	S9B, SAB
+,	NTS, NT
 ,	F
 };
 
@@ -267,7 +268,7 @@ parse
 	static constexpr typename _In_traits::int_type _Tag_bya{0x07};
 	static constexpr typename _In_traits::int_type _Tag_str{0x08};
 	static constexpr typename _In_traits::int_type _Tag_lst{0x09};
-	// static constexpr typename _In_traits::int_type _Tag_cpd{0x0A};
+	static constexpr typename _In_traits::int_type _Tag_cpd{0x0A};
 	// static constexpr typename _In_traits::int_type _Tag_ina{0x0B};
 	// static constexpr typename _In_traits::int_type _Tag_lna{0x0C};
 	using detail::state;
@@ -286,6 +287,12 @@ parse
 			,	{ _Tag_bya,  '7' }
 			,	{ _Tag_str,  '8' }
 			,	{ _Tag_lst,  '9' }
+			,	{ _Tag_cpd,  'A' }
+			}
+		}
+	,	{	state::NTS
+		,	{	{ _Tag_nul,  'AE' }
+			,	{ detail::_, 'AB' }
 			}
 		}
 	,	{ state::S1,  {{ detail::_, '1A' }} }
@@ -301,6 +308,9 @@ parse
 	,	{ state::S9,  {{ detail::_, '9A' }} }
 	,	{ state::S9A, {{ detail::_, '9B' }} }
 	,	{ state::S9B, {{ detail::_, '9C' }} }
+	,	{ state::SA,  {{ detail::_, 'AA' }} }
+	,	{ state::NT,  {{ detail::_, 'NT' }} }
+	,	{ state::SAB, {{ detail::_, 'AC' }} }
 	};
 
 	auto deleter = [] (void *ptr_raw) {
@@ -549,6 +559,53 @@ loop:
 				ret.pop_front();
 				ret.pop_front();
 			}
+			goto loop;
+		}
+	case 'A':
+		in.get();
+		ss.pop();
+		ss.push(state::SA);
+		goto loop;
+	case 'AA':
+		{
+			_Node * const node = _A::allocate(__a, 1);
+			_A::construct
+			(	__a, node
+			,	_Compound_type()
+			);
+			ret.push_front(_Node_ptr(node));
+			ss.pop();
+			ss.push(state::NTS);
+			goto loop;
+		}
+	case 'AB':
+		ss.pop();
+		ss.push(state::NT);
+		ss.push(state::S8);
+		ss.push(state::S1);
+		goto loop;
+	case 'NT':
+		{
+			auto const &tag = std::get<0>(*ret[1]);
+			ss.pop();
+			ss.push(state::SAB);
+			ss.push(detail::state_of_tag(tag));
+			goto loop;
+		}
+	case 'AC':
+		{
+			std::get<9>(*ret[3]).try_emplace
+			(	std::get<7>(*ret[1])
+			,	reinterpret_cast<void *>
+				(	ret.front().release()
+				)
+			,	deleter
+			);
+			ret.pop_front();
+			ret.pop_front();
+			ret.pop_front();
+			ss.pop();
+			ss.push(state::NTS);
 			goto loop;
 		}
 	case '0':
