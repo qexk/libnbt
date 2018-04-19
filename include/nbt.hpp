@@ -517,6 +517,8 @@ loop:
 		{
 			auto const &count = std::get<2>(*ret.front());
 			auto const &tag = std::get<0>(*ret[1]);
+			if constexpr (detail::has_reserve<_List_type>)
+				std::get<8>(*ret[2]).reserve(count);
 			ss.pop();
 			if (count > 0 && tag != _Tag_nul)
 			{
