@@ -319,89 +319,86 @@ loop:
 	switch (trans.at(ss.top()).at(in.peek()))
 	{
 	case '1':
-		ss.pop();
 		in.get();
+		ss.pop();
 		ss.push(state::S1);
 		goto loop;
 	case '1A':
 		{
-			ss.pop();
 			_Node *node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
 			,	static_cast<_Byte>(in.get())
 			);
 			ret.push_front(_Node_ptr(node));
+			ss.pop();
 			goto loop;
 		}
 	case '2':
-		ss.pop();
 		in.get();
+		ss.pop();
 		ss.push(state::S2);
 		goto loop;
 	case '2A':
 		{
-			ss.pop();
-			_Node *node = _A::allocate(__a, 1);
 			_In_char buf[2];
 			in.read(buf, sizeof(buf));
+			_Node *node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
 			,	static_cast<_Short>(detail::b2tos16(buf))
 			);
 			ret.push_front(_Node_ptr(node));
+			ss.pop();
 			goto loop;
 		}
 	case '3':
-		ss.pop();
 		in.get();
+		ss.pop();
 		ss.push(state::S3);
 		goto loop;
 	case '3A':
 		{
-			ss.pop();
-			_Node *node = _A::allocate(__a, 1);
 			_In_char buf[4];
 			in.read(buf, sizeof(buf));
+			_Node *node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
 			,	static_cast<_Int>(detail::b4tos32(buf))
 			);
 			ret.push_front(_Node_ptr(node));
+			ss.pop();
 			goto loop;
 		}
 	case '4':
-		ss.pop();
 		in.get();
+		ss.pop();
 		ss.push(state::S4);
 		goto loop;
 	case '4A':
 		{
-			ss.pop();
-			in.get();
-			_Node *node = _A::allocate(__a, 1);
 			_In_char buf[8];
 			in.read(buf, sizeof(buf));
+			_Node *node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
 			,	static_cast<_Long>(detail::b8tos64(buf))
 			);
 			ret.push_front(_Node_ptr(node));
+			ss.pop();
 			goto loop;
 		}
 	case '5':
-		ss.pop();
 		in.get();
+		ss.pop();
 		ss.push(state::S5);
 		goto loop;
 	case '5A':
 		{
-			ss.pop();
-			in.get();
-			_Node *node = _A::allocate(__a, 1);
 			_In_char buf[4];
 			in.read(buf, sizeof(buf));
 			auto repr = detail::b4tos32(buf);
+			_Node *node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
 			,	static_cast<_Float>
@@ -409,21 +406,20 @@ loop:
 				)
 			);
 			ret.push_front(_Node_ptr(node));
+			ss.pop();
 			goto loop;
 		}
 	case '6':
-		ss.pop();
 		in.get();
+		ss.pop();
 		ss.push(state::S6);
 		goto loop;
 	case '6A':
 		{
-			ss.pop();
-			in.get();
-			_Node *node = _A::allocate(__a, 1);
 			_In_char buf[8];
 			in.read(buf, sizeof(buf));
 			auto repr = detail::b8tos64(buf);
+			_Node *node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
 			,	static_cast<_Double>
@@ -431,11 +427,12 @@ loop:
 				)
 			);
 			ret.push_front(_Node_ptr(node));
+			ss.pop();
 			goto loop;
 		}
 	case '7':
-		ss.pop();
 		in.get();
+		ss.pop();
 		ss.push(state::S7);
 		goto loop;
 	case '7A':
@@ -445,7 +442,6 @@ loop:
 		goto loop;
 	case '7B':
 		{
-			ss.pop();
 			auto const &len = std::get<2>(*ret.front());
 			auto const buf = std::make_unique<_In_char[]>(len);
 			in.read(buf.get(), len);
@@ -463,11 +459,12 @@ loop:
 			);
 			ret.pop_front();
 			ret.push_front(_Node_ptr(node));
+			ss.pop();
 			goto loop;
 		}
 	case '8':
-		ss.pop();
 		in.get();
+		ss.pop();
 		ss.push(state::S8);
 		goto loop;
 	case '8A':
@@ -477,7 +474,6 @@ loop:
 		goto loop;
 	case '8B':
 		{
-			ss.pop();
 			std::size_t const len = std::get<1>(*ret.front());
 			auto const buf = std::make_unique<_In_char[]>(len);
 			in.read(buf.get(), len);
@@ -495,32 +491,33 @@ loop:
 			);
 			ret.pop_front();
 			ret.push_front(_Node_ptr(node));
+			ss.pop();
 			goto loop;
 		}
 	case '9':
-		ss.pop();
 		in.get();
+		ss.pop();
 		ss.push(state::S9);
 		goto loop;
 	case '9A':
 		{
-			ss.pop();
-			ss.push(state::S9A);
-			ss.push(state::S3);
-			ss.push(state::S1);
 			_Node * const node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
 			,	_List_type()
 			);
 			ret.push_front(_Node_ptr(node));
+			ss.pop();
+			ss.push(state::S9A);
+			ss.push(state::S3);
+			ss.push(state::S1);
 			goto loop;
 		}
 	case '9B':
 		{
-			ss.pop();
 			auto const &count = std::get<2>(*ret.front());
 			auto const &tag = std::get<0>(*ret[1]);
+			ss.pop();
 			if (count > 0 && tag != _Tag_nul)
 			{
 				ss.push(state::S9B);
@@ -530,7 +527,6 @@ loop:
 		}
 	case '9C':
 		{
-			ss.pop();
 			auto &count = std::get<2>(*ret[1]);
 			auto const &tag = std::get<0>(*ret[2]);
 			std::get<8>(*ret[3]).emplace_back
@@ -540,6 +536,7 @@ loop:
 			,	deleter
 			);
 			ret.pop_front();
+			ss.pop();
 			if (--count > 0)
 			{
 				ss.push(state::S9B);
