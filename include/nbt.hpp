@@ -186,25 +186,30 @@ struct default_map : public _Base
 
 static constexpr std::monostate _;
 
-template <typename T>
-static inline constexpr auto
-_Has_reserve(int)
-->	decltype(std::declval<T>().reserve(0), std::true_type{})
-{
-	return {};
-}
+# define NBT_HAS__BUILDER_(method)                              \
+template <typename T>                                           \
+static inline constexpr auto                                    \
+_Has_##method(int)                                              \
+->	decltype(std::declval<T>().method(0), std::true_type{}) \
+{                                                               \
+	return {};                                              \
+}                                                               \
+                                                                \
+template <typename T>                                           \
+static inline constexpr auto                                    \
+_Has_##method(...)                                              \
+->	std::false_type                                         \
+{                                                               \
+	return {};                                              \
+}                                                               \
+                                                                \
+template <typename T>                                           \
+static inline constexpr auto has_##method = _Has_##method<T>({})
 
-template <typename T>
-static inline constexpr auto
-_Has_reserve(...)
-->	std::false_type
-{
-	return {};
-}
+NBT_HAS__BUILDER_( reserve );
+NBT_HAS__BUILDER_( try_emplace );
 
-template <typename T>
-static inline constexpr auto has_reserve = _Has_reserve<T>({});
-
+# undef NBT_HAS__BUILDER_
 } // detail
 
 template
