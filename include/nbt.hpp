@@ -114,7 +114,7 @@ b8tos64(_Char const *buf)
 enum class state
 {	S
 ,	S1, S2, S3, S4, S5, S6, S7, S8, S9, SA, SB, SC
-,	S7A, S8A, S9A
+,	S7A, S8A, S9A, SBA
 ,	S9B, SAB
 ,	NTS, NT
 ,	F
@@ -274,7 +274,7 @@ parse
 	static constexpr typename _In_traits::int_type _Tag_str{0x08};
 	static constexpr typename _In_traits::int_type _Tag_lst{0x09};
 	static constexpr typename _In_traits::int_type _Tag_cpd{0x0A};
-	// static constexpr typename _In_traits::int_type _Tag_ina{0x0B};
+	static constexpr typename _In_traits::int_type _Tag_ina{0x0B};
 	// static constexpr typename _In_traits::int_type _Tag_lna{0x0C};
 	using detail::state;
 	std::unordered_map
@@ -293,6 +293,7 @@ parse
 			,	{ _Tag_str,  '8' }
 			,	{ _Tag_lst,  '9' }
 			,	{ _Tag_cpd,  'A' }
+			,	{ _Tag_ina,  'B' }
 			}
 		}
 	,	{	state::NTS
@@ -316,6 +317,8 @@ parse
 	,	{ state::SA,  {{ detail::_, 'AA' }} }
 	,	{ state::NT,  {{ detail::_, 'NT' }} }
 	,	{ state::SAB, {{ detail::_, 'AC' }} }
+	,	{ state::SB,  {{ detail::_, 'BA' }} }
+	,	{ state::SBA, {{ detail::_, 'BB' }} }
 	};
 
 	auto deleter = [] (void *ptr_raw) {
@@ -629,6 +632,42 @@ loop:
 			ret.pop_front();
 			ss.pop();
 			ss.push(state::NTS);
+			goto loop;
+		}
+	case 'B':
+		in.get();
+		ss.pop();
+		ss.push(state::SB);
+		goto loop;
+	case 'BA':
+		ss.pop();
+		ss.push(state::SBA);
+		ss.push(state::S3);
+		goto loop;
+	case 'BB':
+		{
+			auto const &count = std::get<2>(*ret.front());
+			auto const len = count * 4;
+			auto const buf = std::make_unique<_In_char[]>(len);
+			in.read(buf.get(), len);
+			_Int_array_type cont;
+			if constexpr(detail::has_reserve<_Int_array_type>)
+				cont.reserve(len);
+			auto inserter = std::back_inserter(cont);
+			for (auto i = 0; i < count; ++i)
+				inserter = static_cast<_Int>
+				(	detail::b4tos32
+					(	buf.get() + i * 4
+					)
+				);
+			_Node * const node = _A::allocate(__a, 1);
+			_A::construct
+			(	__a, node
+			,	std::move(cont)
+			);
+			ret.pop_front();
+			ret.push_front(_Node_ptr(node));
+			ss.pop();
 			goto loop;
 		}
 	case '0':
