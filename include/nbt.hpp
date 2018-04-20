@@ -599,13 +599,31 @@ loop:
 		}
 	case 'AC':
 		{
-			std::get<9>(*ret[3]).try_emplace
-			(	std::get<7>(*ret[1])
-			,	reinterpret_cast<void *>
-				(	ret.front().release()
-				)
-			,	deleter
-			);
+			if constexpr
+			(	detail::has_try_emplace<_Compound_type>
+			)
+			{
+				std::get<9>(*ret[3]).try_emplace
+				(	std::get<7>(*ret[1])
+				,	reinterpret_cast<void *>
+					(	ret.front().release()
+					)
+				,	deleter
+				);
+			}
+			else
+			{
+				typename _Compound_type::mapped_type value
+				(	reinterpret_cast<void *>
+					(	ret.front().release()
+					)
+				,	deleter
+				);
+				std::get<9>(*ret[3]).emplace
+				(	std::get<7>(*ret[1])
+				,	std::move(value)
+				);
+			}
 			ret.pop_front();
 			ret.pop_front();
 			ret.pop_front();
