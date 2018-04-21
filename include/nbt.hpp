@@ -114,7 +114,7 @@ b8tos64(_Char const *buf)
 enum class state
 {	S
 ,	S1, S2, S3, S4, S5, S6, S7, S8, S9, SA, SB, SC
-,	S7A, S8A, S9A, SBA
+,	S7A, S8A, S9A, SBA, SCA
 ,	S9B, SAB
 ,	NTS, NT
 ,	F
@@ -275,7 +275,7 @@ parse
 	static constexpr typename _In_traits::int_type _Tag_lst{0x09};
 	static constexpr typename _In_traits::int_type _Tag_cpd{0x0A};
 	static constexpr typename _In_traits::int_type _Tag_ina{0x0B};
-	// static constexpr typename _In_traits::int_type _Tag_lna{0x0C};
+	static constexpr typename _In_traits::int_type _Tag_lna{0x0C};
 	using detail::state;
 	std::unordered_map
 	<	state
@@ -294,6 +294,7 @@ parse
 			,	{ _Tag_lst,  '9' }
 			,	{ _Tag_cpd,  'A' }
 			,	{ _Tag_ina,  'B' }
+			,	{ _Tag_lna,  'C' }
 			}
 		}
 	,	{	state::NTS
@@ -319,6 +320,8 @@ parse
 	,	{ state::SAB, {{ detail::_, 'AC' }} }
 	,	{ state::SB,  {{ detail::_, 'BA' }} }
 	,	{ state::SBA, {{ detail::_, 'BB' }} }
+	,	{ state::SC,  {{ detail::_, 'CA' }} }
+	,	{ state::SCA, {{ detail::_, 'CB' }} }
 	};
 
 	auto deleter = [] (void *ptr_raw) {
@@ -658,6 +661,42 @@ loop:
 				inserter = static_cast<_Int>
 				(	detail::b4tos32
 					(	buf.get() + i * 4
+					)
+				);
+			_Node * const node = _A::allocate(__a, 1);
+			_A::construct
+			(	__a, node
+			,	std::move(cont)
+			);
+			ret.pop_front();
+			ret.push_front(_Node_ptr(node));
+			ss.pop();
+			goto loop;
+		}
+	case 'C':
+		in.get();
+		ss.pop();
+		ss.push(state::SC);
+		goto loop;
+	case 'CA':
+		ss.pop();
+		ss.push(state::SCA);
+		ss.push(state::S3);
+		goto loop;
+	case 'CB':
+		{
+			auto const &count = std::get<2>(*ret.front());
+			auto const len = count * 8;
+			auto const buf = std::make_unique<_In_char[]>(len);
+			in.read(buf.get(), len);
+			_Long_array_type cont;
+			if constexpr(detail::has_reserve<_Long_array_type>)
+				cont.reserve(len);
+			auto inserter = std::back_inserter(cont);
+			for (auto i = 0; i < count; ++i)
+				inserter = static_cast<_Int>
+				(	detail::b8tos64
+					(	buf.get() + i * 8
 					)
 				);
 			_Node * const node = _A::allocate(__a, 1);
