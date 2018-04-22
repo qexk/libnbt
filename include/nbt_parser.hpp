@@ -263,19 +263,19 @@ parse
 	using _Node_ptr = std::unique_ptr<_Node>;
 	using _A = typename std::allocator_traits<_Allocator<_Node>>;
 	using _In_traits = typename std::decay_t<decltype(in)>::traits_type;
-	static constexpr typename _In_traits::int_type _Tag_nul{0x00};
-	static constexpr typename _In_traits::int_type _Tag_byt{0x01};
-	static constexpr typename _In_traits::int_type _Tag_sht{0x02};
-	static constexpr typename _In_traits::int_type _Tag_int{0x03};
-	static constexpr typename _In_traits::int_type _Tag_lng{0x04};
-	static constexpr typename _In_traits::int_type _Tag_flt{0x05};
-	static constexpr typename _In_traits::int_type _Tag_dbl{0x06};
-	static constexpr typename _In_traits::int_type _Tag_bya{0x07};
-	static constexpr typename _In_traits::int_type _Tag_str{0x08};
-	static constexpr typename _In_traits::int_type _Tag_lst{0x09};
-	static constexpr typename _In_traits::int_type _Tag_cpd{0x0A};
-	static constexpr typename _In_traits::int_type _Tag_ina{0x0B};
-	static constexpr typename _In_traits::int_type _Tag_lna{0x0C};
+	static constexpr typename _In_traits::int_type tag_nul{0x00};
+	static constexpr typename _In_traits::int_type tag_byt{0x01};
+	static constexpr typename _In_traits::int_type tag_sht{0x02};
+	static constexpr typename _In_traits::int_type tag_int{0x03};
+	static constexpr typename _In_traits::int_type tag_lng{0x04};
+	static constexpr typename _In_traits::int_type tag_flt{0x05};
+	static constexpr typename _In_traits::int_type tag_dbl{0x06};
+	static constexpr typename _In_traits::int_type tag_bya{0x07};
+	static constexpr typename _In_traits::int_type tag_str{0x08};
+	static constexpr typename _In_traits::int_type tag_lst{0x09};
+	static constexpr typename _In_traits::int_type tag_cpd{0x0A};
+	static constexpr typename _In_traits::int_type tag_ina{0x0B};
+	static constexpr typename _In_traits::int_type tag_lna{0x0C};
 	using detail::state;
 	std::unordered_map
 	<	state
@@ -283,22 +283,22 @@ parse
 	> const trans =
 	{	{ state::F, {{ _In_traits::eof(), '0' }} }
 	,	{	state::S
-		,	{	{ _Tag_byt,  '1' }
-			,	{ _Tag_sht,  '2' }
-			,	{ _Tag_int,  '3' }
-			,	{ _Tag_lng,  '4' }
-			,	{ _Tag_flt,  '5' }
-			,	{ _Tag_dbl,  '6' }
-			,	{ _Tag_bya,  '7' }
-			,	{ _Tag_str,  '8' }
-			,	{ _Tag_lst,  '9' }
-			,	{ _Tag_cpd,  'A' }
-			,	{ _Tag_ina,  'B' }
-			,	{ _Tag_lna,  'C' }
+		,	{	{ tag_byt,  '1' }
+			,	{ tag_sht,  '2' }
+			,	{ tag_int,  '3' }
+			,	{ tag_lng,  '4' }
+			,	{ tag_flt,  '5' }
+			,	{ tag_dbl,  '6' }
+			,	{ tag_bya,  '7' }
+			,	{ tag_str,  '8' }
+			,	{ tag_lst,  '9' }
+			,	{ tag_cpd,  'A' }
+			,	{ tag_ina,  'B' }
+			,	{ tag_lna,  'C' }
 			}
 		}
 	,	{	state::NTS
-		,	{	{ _Tag_nul,  'AE' }
+		,	{	{ tag_nul,  'AE' }
 			,	{ detail::_, 'AB' }
 			}
 		}
@@ -541,7 +541,7 @@ loop:
 			if constexpr (detail::has_reserve<_List_type>)
 				std::get<8>(*ret[2]).reserve(count);
 			ss.pop();
-			if (count > 0 && tag != _Tag_nul)
+			if (count > 0 && tag != tag_nul)
 			{
 				ss.push(state::S9B);
 				ss.push(detail::state_of_tag(tag));
