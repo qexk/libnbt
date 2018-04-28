@@ -21,5 +21,6 @@
 # define NBT_H_
 
 # include "nbt_parser.hpp"
+# include "nbt_utilities.hpp"
 
 #endif // !NBT_H_
