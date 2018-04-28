@@ -33,7 +33,7 @@ CXX			:=g++ -std=c++1z
 CPPFLAGS		+=-I $(CATCH_DIR) -I $(INCLUDE_DIR)
 CXXFLAGS		:=-W -Wall -Werror -pedantic -Wno-multichar
 
-SRCS			:=
+SRCS			:=t/00-utilities.t.cpp
 
 .SUFFIXES:
 .SUFFIXES: .cpp
@@ -65,5 +65,5 @@ distclean: clean
 	$(RM) $(VENDOR_DIR)
 
 .PHONY: check
-check:
+check: tests
 	@$(PROVE)
