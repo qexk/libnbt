@@ -79,7 +79,7 @@ struct _Variant_alternative_or_default
 ,	true
 ,	_Alt
 ,	_Variant
-> : public std::true_type
+>
 {
 	static inline constexpr auto is_default = false;
 	using type = std::variant_alternative_t<_Alt, _Variant>;
