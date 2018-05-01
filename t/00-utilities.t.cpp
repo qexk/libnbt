@@ -658,6 +658,48 @@ SCENARIO( "nbt::detail::list_wrapper satisfies Container concept" )
 	}
 }
 
+SCENARIO( "nbt::detail::list_wrapper satisfies some SequenceContainer concepts" )
+{
+	using variant = std::variant<int, list_type>;
+	using list_wrapper = nbt::detail::list_wrapper
+	<	0
+	,	variant
+	,	list_type
+	>;
+
+	GIVEN( "a list_wrapper `a`" )
+	{
+		INFO( "SequenceContainer" );
+		list_wrapper a;
+		WHEN( "`{1, 2, 3}` is assigned to `a`" )
+		{
+			auto const list = make_list<variant>(1, 2, 3);
+			a = &list;
+			THEN( "`a.back()` and `a.back()` can be called" )
+			{
+				CHECK( a.front() == 1 );
+				CHECK( a.back() == 3 );
+			}
+			AND_THEN( "`a[...]` and `a.at(...)` can be called" )
+			{
+				CHECK( a[0] == 1 );
+				CHECK( a[1] == 2 );
+				CHECK( a[2] == 3 );
+				CHECK( a.at(0) == 1 );
+				CHECK( a.at(1) == 2 );
+				CHECK( a.at(2) == 3 );
+			}
+			AND_THEN( "`a.at(x)` throws when `x >= a.size()`" )
+			{
+				CHECK_THROWS_AS
+				(	a.at(a.size())
+				,	std::out_of_range
+				);
+			}
+		}
+	}
+}
+
 int
 main(int argc, char const * const *argv)
 {

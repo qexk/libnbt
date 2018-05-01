@@ -298,6 +298,35 @@ public:
 
 	inline bool
 	empty(void) const { return this->cont->empty(); }
+
+	inline const_reference
+	front(void) const
+	{
+		return *this->begin();
+	}
+
+	inline const_reference
+	back(void) const
+	{
+		return *iterator(--this->cont->cend());
+	}
+
+	inline const_reference
+	operator[](size_type const n) const
+	{
+		return *iterator(this->cont->cbegin() + n);
+	}
+
+	const_reference
+	at(size_type const n) const
+	{
+		if (n >= this->size())
+			throw std::out_of_range
+			(	"nbt::detail::list_wrapper"
+			);
+		else
+			return this->operator[](n);
+	}
 };
 
 } // detail
