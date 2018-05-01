@@ -30,13 +30,14 @@ namespace nbt {
 # define NBT_GETTER__BUILDER_(NAME, TAG)                                  \
 constexpr struct                                                          \
 {                                                                         \
-	constexpr operator auto() const                                   \
+	constexpr operator std::size_t() const                            \
 	{                                                                 \
 		return TAG;                                               \
 	}                                                                 \
                                                                           \
 	template                                                          \
 	<	typename _Variant                                         \
+	,	typename _Del                                             \
 	,	typename _Tp = std::variant_alternative_t<TAG, _Variant>  \
 	>                                                                 \
 	inline std::conditional_t                                         \
@@ -46,7 +47,7 @@ constexpr struct                                                          \
 	,	_Tp                                                       \
 	,	std::add_lvalue_reference_t<_Tp>                          \
 	>                                                                 \
-	operator()(std::unique_ptr<_Variant> const &nbt) const            \
+	operator()(std::unique_ptr<_Variant, _Del> const &nbt) const      \
 	{                                                                 \
 		return std::get<TAG>(*nbt);                               \
 	}                                                                 \
@@ -113,7 +114,14 @@ public:
 	>;
 	using value_type =
 		std::add_const_t
-		<	typename variant_or_default::type
+		<	std::conditional_t
+			<	_Alt == 8
+			,	std::unique_ptr
+				<	_Variant
+				,	void (*) (_Variant *)
+				>
+			,	typename variant_or_default::type
+			>
 		>;
 	using reference = value_type &;
 	using const_reference = value_type const &;
@@ -157,22 +165,38 @@ public:
 			return ret;
 		}
 
-		pointer
+		std::conditional_t
+		<	_Alt == 8
+		,	_Variant *
+		,	pointer
+		>
 		operator->(void) const
 		{
 			auto const variant = reinterpret_cast<_Variant *>
 			(	it->get()
 			);
+			if constexpr (_Alt == 8)
+				return variant;
 			if constexpr (variant_or_default::is_default)
 				return variant;
 			else
 				return std::get_if<_Alt>(variant);
 		}
 
-		inline reference
+		inline std::conditional_t
+		<	_Alt == 8
+		,	value_type
+		,	reference
+		>
 		operator*(void) const
 		{
-			return *this->operator->();
+			if constexpr (_Alt == 8)
+				return value_type
+				(	reinterpret_cast<_Variant *>(it->get())
+				,	[] (_Variant *) {}
+				);
+			else
+				return *this->operator->();
 		}
 
 		inline bool
@@ -286,15 +310,29 @@ constexpr struct
 	}
 
 	template
-	<	unsigned _Alt = (unsigned)(-1)
+	<	unsigned _Alt
 	,	typename _Variant
+	,	typename _Del
 	,	typename _List = std::variant_alternative_t<8, _Variant>
 	>
-	auto //detail::list_wrapper<_Alt, _Variant, _List>
-	inline operator()(std::unique_ptr<_Variant> const &nbt) const
+	auto
+	inline as(std::unique_ptr<_Variant, _Del> const &nbt) const
 	{
 		return detail::list_wrapper<_Alt, _Variant, _List>
-		(	&std::get<8>(*nbt)
+		(	std::get_if<8>(nbt.get())
+		);
+	}
+
+	template
+	<	typename _Variant
+	,	typename _Del
+	,	typename _Tp = std::variant_alternative_t<8, _Variant>
+	>
+	auto
+	inline operator()(std::unique_ptr<_Variant, _Del> const &nbt) const
+	{
+		return detail::list_wrapper<(unsigned)(-1), _Variant, _Tp>
+		(	std::get_if<8>(nbt.get())
 		);
 	}
 } list;

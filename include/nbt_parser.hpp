@@ -464,15 +464,23 @@ loop:
 	case '7B':
 		{
 			auto const &len = std::get<2>(*ret.front());
-			auto const buf = std::make_unique<_In_char[]>(len);
-			in.read(buf.get(), len);
 			_Byte_array_type cont;
-			if constexpr(detail::has_reserve<_Byte_array_type>)
-				cont.reserve(len);
-			std::copy
-			(	buf.get(), buf.get() + len
-			,	std::back_inserter(cont)
-			);
+			if (len > 0)
+			{
+				auto const buf =
+					std::make_unique<_In_char[]>(len);
+				in.read(buf.get(), len);
+				if constexpr
+				(	detail::has_reserve
+					<	_Byte_array_type
+					>
+				)
+					cont.reserve(len);
+				std::copy
+				(	buf.get(), buf.get() + len
+				,	std::back_inserter(cont)
+				);
+			}
 			_Node * const node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
@@ -545,6 +553,11 @@ loop:
 			{
 				ss.push(state::S9B);
 				ss.push(detail::state_of_tag(tag));
+			}
+			else
+			{
+				ret.pop_front();
+				ret.pop_front();
 			}
 			goto loop;
 		}
