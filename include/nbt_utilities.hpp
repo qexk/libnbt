@@ -236,13 +236,28 @@ public:
 	}
 
 	inline const_iterator
-	begin(void) const { return iterator(this->cont->cbegin()); }
+	begin(void) const
+	{
+		return iterator(this->cont->cbegin());
+	}
+
 	inline const_iterator
-	end(void) const { return iterator(this->cont->cend()); }
+	end(void) const
+	{
+		return iterator(this->cont->cend());
+	}
+
 	inline const_iterator
-	cbegin(void) const { return this->begin(); }
+	cbegin(void) const
+	{
+		return this->begin();
+	}
+
 	inline const_iterator
-	cend(void) const { return this->end(); }
+	cend(void) const
+	{
+		return this->end();
+	}
 
 	template
 	<	unsigned _Alt_a
@@ -292,12 +307,22 @@ public:
 	}
 
 	inline size_type
-	size(void) const { return this->cont->size(); }
+	size(void) const
+	{
+		return this->cont->size();
+	}
+	
 	inline size_type
-	max_size(void) const { return this->cont->max_size(); }
+	max_size(void) const
+	{
+		return this->cont->max_size();
+	}
 
 	inline bool
-	empty(void) const { return this->cont->empty(); }
+	empty(void) const
+	{
+		return this->cont->empty();
+	}
 
 	inline const_reference
 	front(void) const
