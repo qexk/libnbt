@@ -104,6 +104,7 @@ class list_wrapper
 # ifdef NBT_UNIT_TEST_
 public:
 # endif // NBT_UNIT_TEST_
+	static inline _List const defaulted = _List();
 	_List const *cont;
 public:
 	using variant_or_default = variant_alternative_or_default
@@ -123,9 +124,6 @@ public:
 	{
 # ifdef NBT_UNIT_TEST_
 	public:
-		iterator()
-		:	it()
-		{}
 # endif // NBT_UNIT_TEST_
 		typename _List::const_iterator it;
 	public:
@@ -135,6 +133,10 @@ public:
 		using pointer = value_type *;
 		using reference = value_type &;
 		using iterator_category = std::input_iterator_tag;
+
+		iterator()
+		:	it()
+		{}
 
 		iterator(typename _List::const_iterator const &it)
 		:	it(it)
@@ -187,6 +189,10 @@ public:
 	};
 	using const_iterator = iterator const;
 
+	list_wrapper()
+	:	cont{&list_wrapper<_Alt, _Variant, _List>::defaulted}
+	{}
+
 	list_wrapper(_List const *cont)
 	:	cont{cont}
 	{}
@@ -199,23 +205,28 @@ public:
 	{}
 
 	list_wrapper &
-	operator=(list_wrapper a)
+	operator=(list_wrapper const &a)
 	{
 		this->cont = a.cont;
 		return *this;
 	}
 
 	inline const_iterator
-	begin(void) const { return iterator(this->cont.cbegin()); }
+	begin(void) const { return iterator(this->cont->cbegin()); }
 	inline const_iterator
-	end(void) const { return iterator(this->cont.cend()); }
+	end(void) const { return iterator(this->cont->cend()); }
 	inline const_iterator
 	cbegin(void) const { return this->begin(); }
 	inline const_iterator
 	cend(void) const { return this->end(); }
 
+	template
+	<	unsigned _Alt_a
+	,	typename _Variant_a
+	,	typename _List_a
+	>
 	bool
-	operator==(list_wrapper const a) const
+	operator==(list_wrapper<_Alt_a, _Variant_a, _List_a> const &a) const
 	{
 		return
 			this->cont == a.cont
@@ -225,40 +236,51 @@ public:
 			);
 	}
 
+	template
+	<	unsigned _Alt_a
+	,	typename _Variant_a
+	,	typename _List_a
+	>
 	inline bool
-	operator!=(list_wrapper const a) const
+	operator!=(list_wrapper<_Alt_a, _Variant_a, _List_a> const &a) const
 	{
 		return !this->operator==(a);
 	}
 
 	void
-	swap(list_wrapper a) noexcept
+	swap(list_wrapper &a) noexcept
 	{
 		auto const tmp = this->cont;
 		this->cont = a.cont;
 		a.cont = tmp;
 	}
 
+	void
+	swap(list_wrapper &&a) noexcept
+	{
+		this->operator=(std::forward(a));
+	}
+
 	friend void
-	swap(list_wrapper a, list_wrapper b) noexcept
+	swap(list_wrapper &a, list_wrapper &b) noexcept
 	{
 		return a.swap(b);
 	}
 
 	inline size_type
-	size(void) const { return this->cont.size(); }
+	size(void) const { return this->cont->size(); }
 	inline size_type
-	max_size(void) const { return this->cont.max_size(); }
+	max_size(void) const { return this->cont->max_size(); }
 
 	inline bool
-	empty(void) const { return this->cont.empty(); }
+	empty(void) const { return this->cont->empty(); }
 };
 
 } // detail
 
 constexpr struct
 {
-	constexpr operator auto() const
+	constexpr operator std::size_t() const
 	{
 		return 8;
 	}

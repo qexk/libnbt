@@ -253,7 +253,7 @@ SCENARIO( "nbt::detail::list_wrapper::iterator satisfies Iterator concept" )
 		}
 	}
 }
-#include <variant>
+
 SCENARIO( "nbt::detail::list_wrapper::iterator satisfies InputIterator concept" )
 {
 	using variant = std::variant<int, list_type>;
@@ -313,7 +313,6 @@ SCENARIO( "nbt::detail::list_wrapper::iterator satisfies InputIterator concept" 
 		}
 	}
 
-
 	GIVEN( "an iterator `a`" )
 	{
 		using variant = std::variant<std::string, list_type>;
@@ -341,6 +340,320 @@ SCENARIO( "nbt::detail::list_wrapper::iterator satisfies InputIterator concept" 
 		{
 			CHECK( *a++ == 42 );
 			CHECK( *a == 84 );
+		}
+	}
+}
+
+SCENARIO( "nbt::detail::list_wrapper::iterator satisfies ForwardIterator concept" )
+{
+	using variant = std::variant<int, list_type>;
+	using iterator = nbt::detail::list_wrapper
+	<	0
+	,	variant
+	,	list_type
+	>::iterator;
+
+	static_assert(std::is_default_constructible_v<iterator>);
+	THEN( "`iterator` satisfies DefaultConstructible" )
+	{
+		INFO( "DefaultConstructible" );
+		GIVEN( "two iterators `a` and `b` default-initialized" )
+		{
+			iterator a;
+			iterator b;
+			THEN( "they are equal" )
+			{
+				CHECK( a == b );
+			}
+		}
+
+		GIVEN( "two iterators `a` and `b` value-initialized" )
+		{
+			iterator a{};
+			iterator b{};
+			THEN( "they are equal" )
+			{
+				CHECK( a == b );
+			}
+		}
+
+		THEN( "two temporaries default-initialized are equivalent" )
+		{
+			CHECK( iterator() == iterator() );
+		}
+
+		THEN( "two temporaries value-initialized are equivalent" )
+		{
+			CHECK( iterator{} == iterator{} );
+		}
+	}
+
+	THEN( "`iterator` is a non-mutable InputIterator" )
+	{
+		CHECK
+		(	std::is_same_v
+			<	std::iterator_traits<iterator>::reference
+			,	std::add_lvalue_reference_t
+				<	std::add_const_t
+					<	std::iterator_traits
+						<	iterator
+						>::value_type
+					>
+				>
+			>
+		);
+	}
+
+	GIVEN( "two iterators `a` and `b`" )
+	{
+		INFO( "multipass garantee" );
+		auto const list = make_list<variant>(42, 84);
+		iterator a(list.begin());
+		iterator b(list.begin());
+		WHEN( "`a` is equivalent to `b`" )
+		{
+			CHECK( a == b );
+			THEN( "incrementing both keeps them equivalent" )
+			{
+				CHECK( ++a == ++b );
+			}
+		}
+		WHEN( "incrementing a copy of `a`" )
+		{
+			THEN( "equivalence is preserved" )
+			{
+				CHECK( ((void)++iterator(a), *a) == *a );
+			}
+		}
+	}
+}
+
+SCENARIO( "nbt::detail::list_wrapper satisfies Container concept" )
+{
+	using variant = std::variant<int, list_type>;
+	using list_wrapper = nbt::detail::list_wrapper
+	<	0
+	,	variant
+	,	list_type
+	>;
+
+	GIVEN( "a `list_wrapper` type" )
+	{
+		INFO( "Types" );
+		CHECK
+		(	std::is_same_v
+			<	list_wrapper::reference
+			,	std::add_lvalue_reference_t
+				<	list_wrapper::value_type
+				>
+			>
+		);
+		CHECK
+		(	std::is_same_v
+			<	list_wrapper::const_reference
+			,	std::add_lvalue_reference_t
+				<	std::add_const_t
+					<	list_wrapper::value_type
+					>
+				>
+			>
+		);
+		CHECK
+		(	std::is_same_v
+			<	list_wrapper::const_iterator
+			,	std::add_const_t
+				<	list_wrapper::iterator
+				>
+			>
+		);
+		CHECK( std::is_signed_v<list_wrapper::difference_type> );
+		CHECK
+		(	std::is_same_v
+			<	list_wrapper::difference_type
+			,	std::iterator_traits<list_wrapper::iterator>
+				::difference_type
+			>
+		);
+		CHECK( std::is_unsigned_v<list_wrapper::size_type> );
+		CHECK
+		(	std::numeric_limits<list_wrapper::size_type>
+				::max()
+			> std::numeric_limits<list_wrapper::difference_type>
+				::max()
+		);
+	}
+
+	INFO( "methods and expressions" )
+	GIVEN( "a default-constructed list_wrapper `c`" )
+	{
+		INFO( ".empty()" );
+		list_wrapper c;
+		THEN( "`c` is empty" )
+		{
+			CHECK( c.empty() );
+		}
+		AND_THEN( "`c` can be copied" )
+		{
+			CHECK( list_wrapper(c) == c );
+		}
+	}
+
+	GIVEN( "two list_wrappers `a` and `b` wrapping different containers" )
+	{
+		INFO( "assignment" );
+		auto const list_a = make_list<variant>(1, 2, 3);
+		auto const list_b = make_list<variant>(4, 5, 6);
+		list_wrapper a(&list_a);
+		list_wrapper b(&list_b);
+		WHEN( "`b` is assigned to `a`" )
+		{
+			a = b;
+			THEN( "`a` and `b` are equivalent" )
+			{
+				CHECK( a == b );
+				CHECK( a.cont == b.cont );
+			}
+		}
+		WHEN( "`list_wrapper rvalue` is assigned to `a`" )
+		{
+			a = list_wrapper(&list_b);
+			THEN( "`a` and `b` are equivalent" )
+			{
+				CHECK( a == b );
+				CHECK( a.cont == b.cont );
+			}
+		}
+	}
+
+	GIVEN( "a list_wrapper `a`" )
+	{
+		INFO( "iterator types" );
+		list_wrapper a;
+		THEN( "functions returning iterators actually return iterators" )
+		{
+			CHECK
+			(	std::is_same_v
+				<	decltype(a.begin())
+				,	list_wrapper::const_iterator
+				>
+			);
+			CHECK
+			(	std::is_same_v
+				<	decltype(a.end())
+				,	list_wrapper::const_iterator
+				>
+			);
+			CHECK
+			(	std::is_same_v
+				<	decltype(a.cbegin())
+				,	list_wrapper::const_iterator
+				>
+			);
+			CHECK
+			(	std::is_same_v
+				<	decltype(a.cend())
+				,	list_wrapper::const_iterator
+				>
+			);
+		}
+	}
+
+	GIVEN( "two list_wrapper `a` and `b` of different template types wrapping different lists containing the same sequence" )
+	{
+		INFO( "equivalence" );
+		using variant_a = std::variant<std::uint16_t, list_type>;
+		using variant_b = std::variant<std::uint32_t, list_type>;
+		auto list_a = make_list<variant_a>(1, 2, 3);
+		auto list_b = make_list<variant_b>(1, 2, 3);
+		nbt::detail::list_wrapper
+		<	0
+		,	variant_a
+		,	list_type
+		> a(&list_a);
+		nbt::detail::list_wrapper
+		<	0
+		,	variant_b
+		,	list_type
+		> b(&list_b);
+		THEN( "equality is maintained across different types" )
+		{
+			CHECK( a == b );
+		}
+		AND_WHEN( "`b`'s wrapped list is changed" )
+		{
+			list_b = make_list<variant_b>(1, 2, 0);
+			THEN( "`b` is no longer equivalent to `a`" )
+			{
+				CHECK( a != b );
+			}
+		}
+	}
+
+	GIVEN( "two list_wrappers `a` and `b` wrapping different containers" )
+	{
+		INFO( "swaps" );
+		auto const list_a = make_list<variant>(1, 2, 3);
+		auto const list_b = make_list<variant>(4, 5, 6);
+		list_wrapper a(&list_a);
+		list_wrapper b(&list_b);
+		list_wrapper old_a(a);
+		list_wrapper old_b(b);
+		REQUIRE( a != b );
+		WHEN( "`a` is swapped with `b` using method" )
+		{
+			a.swap(b);
+			THEN( "`a` and `b`'s wrappee are swapped" )
+			{
+				CHECK( a == old_b );
+				CHECK( b == old_a );
+			}
+		}
+		WHEN( "`a` is swapped with `b` using std::swap" )
+		{
+			using std::swap;
+			swap(a, b);
+			THEN( "`a` and `b`'s wrappee are swapped" )
+			{
+				CHECK( a == old_b );
+				CHECK( b == old_a );
+			}
+		}
+	}
+
+	GIVEN( "a list_wrapper `a`" )
+	{
+		list_wrapper a;
+		WHEN( "`{}` is assigned to `a`" )
+		{
+			auto const list = make_list<variant>();
+			a = &list;
+			THEN( "`a` is empty" )
+			{
+				CHECK( a.empty() );
+				CHECK
+				(	a.size()
+					== std::distance(a.begin(), a.end())
+				);
+				CHECK( a.size() == 0 );
+			}
+			AND_THEN( "`.max_size()` is the same for `a` and the sequence" )
+			{
+				CHECK( a.max_size() == list.max_size() );
+			}
+		}
+		WHEN( "`{1, 2, 3}` is assigned to `a`" )
+		{
+			auto const list = make_list<variant>(1, 2, 3);
+			a = &list;
+			THEN( "`a` is empty" )
+			{
+				CHECK_FALSE( a.empty() );
+				CHECK
+				(	a.size()
+					== std::distance(a.begin(), a.end())
+				);
+				CHECK( a.size() == 3 );
+			}
 		}
 	}
 }
