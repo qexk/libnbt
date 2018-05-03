@@ -24,9 +24,9 @@ INCLUDE_DIR		:=include/
 
 CATCH_DIR		:=$(VENDOR_DIR)catchorg/Catch2/
 CATCH_URL		:=https://raw.githubusercontent.com/catchorg/Catch2/master/single_include/
-CATCH_HPPS		:=${addprefix $(CATCH_DIR),\
-			  catch.hpp\
-			  catch_reporter_tap.hpp\
+CATCH_HPPS		:=${addprefix $(CATCH_DIR), \
+			  catch.hpp \
+			  catch_reporter_tap.hpp \
 			  }
 
 CXX			:=g++ -std=c++1z
@@ -37,7 +37,7 @@ SRCS			:=t/01-parsing.t.cpp \
 			  t/00-utilities.t.cpp
 
 .SUFFIXES:
-.SUFFIXES: .cpp
+.SUFFIXES: .cpp .o
 
 .PHONY: all
 all: tests
@@ -45,26 +45,24 @@ all: tests
 .PHONY: tests
 tests: $(SRCS:.cpp=)
 
-%.d:: %.t.cpp
-	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MM $< -MT $*.t.cpp \
-		| sed -E 's/\S+\.cpp//2' > $@
-
-.PRECIOUS: $(SRCS:.t.cpp=.d)
-sinclude $(SRCS:.t.cpp=.d)
-
 $(CATCH_DIR)%.hpp:
 	$(CURL) '$(CATCH_URL)$*.hpp' -o $@ --create-dirs
 
-$(SRCS:.cpp=): | $(CATCH_HPPS)
+$(SRCS): | $(CATCH_HPPS)
+
+%.t: %.t.o t/main.o
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
 
 .PHONY: clean
 clean:
-	$(RM) $(SRCS:.cpp=) $(SRCS:.t.cpp=.d)
+	$(RM) $(SRCS:.cpp=) $(SRCS:.cpp=.o)
 
 .PHONY: distclean
 distclean: clean
-	$(RM) $(VENDOR_DIR)
+	$(RM) $(VENDOR_DIR) t/main.o
 
 .PHONY: check
 check: tests
 	@$(PROVE)
+
+.PRECIOUS: %.o
