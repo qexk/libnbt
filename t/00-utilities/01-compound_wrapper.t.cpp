@@ -195,10 +195,7 @@ SCENARIO( "nbt::detail::compound_wrapper::iterator satisfies Iterator concept" )
 				<	compound_wrapper::iterator::value_type
 				,	std::pair
 					<	std::string const
-					,	std::unique_ptr
-						<	variant
-						,	void (*) (variant *)
-						> const
+					,	variant const *
 					>
 				>
 			);
@@ -242,7 +239,7 @@ SCENARIO( "nbt::detail::compound_wrapper::iterator satisfies Iterator concept" )
 					== compound.begin()->first
 				);
 				CHECK
-				(	(*u).second.get()
+				(	(*u).second
 					== compound.begin()->second.get()
 				);
 			}
@@ -257,7 +254,7 @@ SCENARIO( "nbt::detail::compound_wrapper::iterator satisfies Iterator concept" )
 			{
 
 				CHECK
-				(	(*++u).second.get()
+				(	(*++u).second
 					== (++compound.begin())->second.get()
 				);
 			}
@@ -354,7 +351,7 @@ SCENARIO( "nbt::detail::compound_wrapper::iterator satisfies InputIterator conce
 		{
 			CHECK( a->first == compound.begin()->first );
 			CHECK
-			(	a->second.get()
+			(	a->second
 				== compound.begin()->second.get()
 			);
 			CHECK( a->first.substr(0, 5) == "Shrek" );
@@ -373,11 +370,11 @@ SCENARIO( "nbt::detail::compound_wrapper::iterator satisfies InputIterator conce
 		THEN( "`a++` returns a copy of itself before incrementing" )
 		{
 			CHECK
-			(	(a++)->second.get()
+			(	(a++)->second
 				== compound.begin()->second.get()
 			);
 			CHECK
-			(	a->second.get()
+			(	a->second
 				== (++compound.begin())->second.get()
 			);
 		}

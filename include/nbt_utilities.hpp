@@ -37,7 +37,6 @@ constexpr struct                                                         \
                                                                          \
 	template                                                         \
 	<	typename _Variant                                        \
-	,	typename _Del                                            \
 	,	typename _Tp = std::variant_alternative_t<TAG, _Variant> \
 	>                                                                \
 	inline std::conditional_t                                        \
@@ -47,7 +46,23 @@ constexpr struct                                                         \
 	,	_Tp                                                      \
 	,	std::add_lvalue_reference_t<_Tp>                         \
 	>                                                                \
-	operator()(std::unique_ptr<_Variant, _Del> const &nbt) const     \
+	operator()(std::unique_ptr<_Variant> const &nbt) const           \
+	{                                                                \
+		return std::get<TAG>(*nbt);                              \
+	}                                                                \
+                                                                         \
+	template                                                         \
+	<	typename _Variant                                        \
+	,	typename _Tp = std::variant_alternative_t<TAG, _Variant> \
+	>                                                                \
+	inline std::conditional_t                                        \
+	<	sizeof(_Tp) <= sizeof(std::size_t)                       \
+		&& std::is_copy_constructible_v<_Tp>                     \
+		&& std::is_copy_assignable_v<_Tp>                        \
+	,	_Tp                                                      \
+	,	std::add_lvalue_reference_t<_Tp>                         \
+	>                                                                \
+	operator()(_Variant const *nbt) const                            \
 	{                                                                \
 		return std::get<TAG>(*nbt);                              \
 	}                                                                \
@@ -184,17 +199,14 @@ public:
 
 		inline std::conditional_t
 		<	_Alt == 8
-		,	value_type
+		,	_Variant *
 		,	reference
 		>
 		operator*(void) const
 		{
 			if constexpr (_Alt == 8)
-				return value_type
-				(	reinterpret_cast<_Variant *>
-					(	it->get()
-					)
-				,	[] (_Variant *) {}
+				return reinterpret_cast<_Variant *>
+				(	it->get()
 				);
 			else
 				return *this->operator->();
@@ -369,12 +381,9 @@ public:
 	_Compound const *cont;
 public:
 	using key_type = std::decay_t<_String>;
-	using mapped_type = std::unique_ptr
-	<	std::decay_t<_Variant>
-	,	void (*) (_Variant *)
-	>;
+	using mapped_type = std::decay_t<_Variant> const *;
 
-	using value_type = std::pair<key_type const, mapped_type const>;
+	using value_type = std::pair<key_type const, mapped_type>;
 	using reference = value_type &;
 	using const_reference = value_type const &;
 	using difference_type = std::ptrdiff_t;
@@ -425,11 +434,8 @@ public:
 			auto const &pair = *it;
 			return std::make_pair
 			(	pair.first
-			,	mapped_type
-				(	reinterpret_cast<_Variant *>
-					(	pair.second.get()
-					)
-				,	[] (_Variant *) {}
+			,	reinterpret_cast<_Variant *>
+				(	pair.second.get()
 				)
 			);
 		}
@@ -441,11 +447,8 @@ public:
 			return std::unique_ptr<value_type>
 			(	new value_type
 				(	pair.first
-				,	mapped_type
-					(	reinterpret_cast<_Variant *>
-						(	pair.second.get()
-						)
-					,	[] (_Variant *) {}
+				,	reinterpret_cast<_Variant *>
+					(	pair.second.get()
 					)
 				)
 			);
@@ -600,15 +603,9 @@ public:
 		(	auto const &it = this->cont->find(n)
 		;	it != this->cont->cend()
 		)
-			return mapped_type
-			(	iterator(it)->second.get()
-			,	[] (_Variant *) {}
-			);
+			return iterator(it)->second;
 		else
-			return mapped_type
-			(	nullptr
-			,	[] (_Variant *) {}
-			);
+			return nullptr;
 	}
 
 	inline mapped_type
@@ -618,10 +615,7 @@ public:
 		(	auto const &it = this->cont->find(n)
 		;	it != this->cont->cend()
 		)
-			return mapped_type
-			(	iterator(it)->second.get()
-			,	[] (_Variant *) {}
-			);
+			return iterator(it)->second;
 		else
 			throw std::out_of_range
 			(	"nbt::detail::compound_wrapper"
@@ -641,11 +635,10 @@ constexpr struct
 	template
 	<	unsigned _Alt
 	,	typename _Variant
-	,	typename _Del
 	,	typename _List = std::variant_alternative_t<8, _Variant>
 	>
 	auto
-	inline as(std::unique_ptr<_Variant, _Del> const &nbt) const
+	inline as(std::unique_ptr<_Variant> const &nbt) const
 	{
 		return detail::list_wrapper<_Alt, _Variant, _List>
 		(	std::get_if<8>(nbt.get())
@@ -653,15 +646,39 @@ constexpr struct
 	}
 
 	template
+	<	unsigned _Alt
+	,	typename _Variant
+	,	typename _List = std::variant_alternative_t<8, _Variant>
+	>
+	auto
+	inline as(_Variant const *nbt) const
+	{
+		return detail::list_wrapper<_Alt, _Variant, _List>
+		(	std::get_if<8>(nbt)
+		);
+	}
+
+	template
 	<	typename _Variant
-	,	typename _Del
 	,	typename _Tp = std::variant_alternative_t<8, _Variant>
 	>
 	auto
-	inline operator()(std::unique_ptr<_Variant, _Del> const &nbt) const
+	inline operator()(std::unique_ptr<_Variant> const &nbt) const
 	{
 		return detail::list_wrapper<(unsigned)(-1), _Variant, _Tp>
 		(	std::get_if<8>(nbt.get())
+		);
+	}
+
+	template
+	<	typename _Variant
+	,	typename _Tp = std::variant_alternative_t<8, _Variant>
+	>
+	auto
+	inline operator()(_Variant const *nbt) const
+	{
+		return detail::list_wrapper<(unsigned)(-1), _Variant, _Tp>
+		(	std::get_if<8>(nbt)
 		);
 	}
 } list;
@@ -682,6 +699,18 @@ constexpr struct
 	{
 		return detail::compound_wrapper<_Variant, _Tp>
 		(	std::get_if<9>(nbt.get())
+		);
+	}
+
+	template
+	<	typename _Variant
+	,	typename _Tp = std::variant_alternative_t<9, _Variant>
+	>
+	auto
+	inline operator()(_Variant const *nbt) const
+	{
+		return detail::compound_wrapper<_Variant, _Tp>
+		(	std::get_if<9>(nbt)
 		);
 	}
 } compound;
