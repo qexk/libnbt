@@ -33,8 +33,9 @@ CXX			:=g++ -std=c++1z
 CPPFLAGS		+=-I $(CATCH_DIR) -I $(INCLUDE_DIR)
 CXXFLAGS		:=-W -Wall -Werror -pedantic -Wno-multichar
 
-SRCS			:=t/01-parsing.t.cpp \
-			  t/00-utilities.t.cpp
+SRCS			:=t/00-utilities/00-list_wrapper.t.cpp \
+			  t/00-utilities/01-compound_wrapper.t.cpp \
+			  t/01-parsing.t.cpp
 
 .SUFFIXES:
 .SUFFIXES: .cpp .o

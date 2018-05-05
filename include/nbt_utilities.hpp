@@ -27,30 +27,30 @@
 
 namespace nbt {
 
-# define NBT_GETTER__BUILDER_(NAME, TAG)                                  \
-constexpr struct                                                          \
-{                                                                         \
-	constexpr operator std::size_t() const                            \
-	{                                                                 \
-		return TAG;                                               \
-	}                                                                 \
-                                                                          \
-	template                                                          \
-	<	typename _Variant                                         \
-	,	typename _Del                                             \
-	,	typename _Tp = std::variant_alternative_t<TAG, _Variant>  \
-	>                                                                 \
-	inline std::conditional_t                                         \
-	<	sizeof(_Tp) <= sizeof(std::size_t)                        \
-		&& std::is_copy_constructible_v<_Tp>                      \
-		&& std::is_copy_assignable_v<_Tp>                         \
-	,	_Tp                                                       \
-	,	std::add_lvalue_reference_t<_Tp>                          \
-	>                                                                 \
-	operator()(std::unique_ptr<_Variant, _Del> const &nbt) const      \
-	{                                                                 \
-		return std::get<TAG>(*nbt);                               \
-	}                                                                 \
+# define NBT_GETTER__BUILDER_(NAME, TAG)                                 \
+constexpr struct                                                         \
+{                                                                        \
+	constexpr operator std::size_t() const                           \
+	{                                                                \
+		return TAG;                                              \
+	}                                                                \
+                                                                         \
+	template                                                         \
+	<	typename _Variant                                        \
+	,	typename _Del                                            \
+	,	typename _Tp = std::variant_alternative_t<TAG, _Variant> \
+	>                                                                \
+	inline std::conditional_t                                        \
+	<	sizeof(_Tp) <= sizeof(std::size_t)                       \
+		&& std::is_copy_constructible_v<_Tp>                     \
+		&& std::is_copy_assignable_v<_Tp>                        \
+	,	_Tp                                                      \
+	,	std::add_lvalue_reference_t<_Tp>                         \
+	>                                                                \
+	operator()(std::unique_ptr<_Variant, _Del> const &nbt) const     \
+	{                                                                \
+		return std::get<TAG>(*nbt);                              \
+	}                                                                \
 } NAME
 
 NBT_GETTER__BUILDER_(byte,       0 );
@@ -61,7 +61,6 @@ NBT_GETTER__BUILDER_(float_,     4 );
 NBT_GETTER__BUILDER_(double_,    5 );
 NBT_GETTER__BUILDER_(byte_array, 6 );
 NBT_GETTER__BUILDER_(string,     7 );
-NBT_GETTER__BUILDER_(compound,   9 );
 NBT_GETTER__BUILDER_(int_array,  10);
 NBT_GETTER__BUILDER_(long_array, 11);
 
@@ -192,7 +191,9 @@ public:
 		{
 			if constexpr (_Alt == 8)
 				return value_type
-				(	reinterpret_cast<_Variant *>(it->get())
+				(	reinterpret_cast<_Variant *>
+					(	it->get()
+					)
 				,	[] (_Variant *) {}
 				);
 			else
@@ -354,6 +355,280 @@ public:
 	}
 };
 
+template
+<	typename _Variant
+,	typename _Compound
+,	typename _String = std::variant_alternative_t<nbt::string, _Variant>
+>
+class compound_wrapper
+{
+# ifdef NBT_UNIT_TEST_
+public:
+# endif // NBT_UNIT_TEST_
+	static inline _Compound const defaulted = _Compound();
+	_Compound const *cont;
+public:
+	using key_type = std::decay_t<_String>;
+	using mapped_type = std::unique_ptr
+	<	std::decay_t<_Variant>
+	,	void (*) (_Variant *)
+	>;
+
+	using value_type = std::pair<key_type const, mapped_type const>;
+	using reference = value_type &;
+	using const_reference = value_type const &;
+	using difference_type = std::ptrdiff_t;
+	using size_type = std::size_t;
+
+	using hasher = typename _Compound::hasher;
+	using key_equal = typename _Compound::key_equal;
+
+	class iterator
+	{
+# ifdef NBT_UNIT_TEST_
+	public:
+# endif // NBT_UNIT_TEST_
+		typename _Compound::const_iterator it;
+	public:
+		using difference_type = std::ptrdiff_t;
+		using value_type = compound_wrapper::value_type;
+		using pointer = value_type *;
+		using reference = value_type &;
+		using iterator_category = std::input_iterator_tag;
+
+		iterator()
+		:	it()
+		{}
+
+		iterator(typename _Compound::const_iterator const &it)
+		:	it(it)
+		{}
+
+		inline iterator &
+		operator++(void)
+		{
+			++it;
+			return *this;
+		}
+
+		inline iterator
+		operator++(int)
+		{
+			iterator ret(*this);
+			this->operator++();
+			return ret;
+		}
+
+		value_type
+		operator*(void) const
+		{
+			auto const &pair = *it;
+			return std::make_pair
+			(	pair.first
+			,	mapped_type
+				(	reinterpret_cast<_Variant *>
+					(	pair.second.get()
+					)
+				,	[] (_Variant *) {}
+				)
+			);
+		}
+
+		std::unique_ptr<value_type>
+		operator->(void) const
+		{
+			auto const &pair = *it;
+			return std::unique_ptr<value_type>
+			(	new value_type
+				(	pair.first
+				,	mapped_type
+					(	reinterpret_cast<_Variant *>
+						(	pair.second.get()
+						)
+					,	[] (_Variant *) {}
+					)
+				)
+			);
+		}
+
+		inline bool
+		operator==(iterator const &rhs) const
+		{
+			return this->it == rhs.it;
+		}
+
+		inline bool
+		operator!=(iterator const &rhs) const
+		{
+			return this->it != rhs.it;
+		}
+	};
+	using const_iterator = iterator const;
+	using local_iterator = iterator;
+	using const_local_iterator = local_iterator const;
+
+	compound_wrapper()
+	:	cont{&compound_wrapper::defaulted}
+	{}
+
+	compound_wrapper(_Compound const *cont)
+	:	cont{cont}
+	{}
+
+	compound_wrapper(compound_wrapper const &a)
+	:	cont{a.cont}
+	{}
+
+	~compound_wrapper()
+	{}
+
+	compound_wrapper &
+	operator=(compound_wrapper const &a)
+	{
+		this->cont = a.cont;
+		return *this;
+	}
+
+	inline const_iterator
+	begin(void) const
+	{
+		return iterator(this->cont->cbegin());
+	}
+
+	inline const_iterator
+	end(void) const
+	{
+		return iterator(this->cont->cend());
+	}
+
+	inline const_iterator
+	cbegin(void) const
+	{
+		return this->begin();
+	}
+
+	inline const_iterator
+	cend(void) const
+	{
+		return this->end();
+	}
+
+	template
+	<	typename _Variant_a
+	,	typename _Compound_a
+	,	typename _String_a
+	>
+	bool
+	operator==
+	(	compound_wrapper
+		<	_Variant_a, _Compound_a, _String_a
+		> const &a
+	) const
+	{
+		return this->cont == a.cont;
+	}
+
+	template
+	<	typename _Variant_a
+	,	typename _Compound_a
+	,	typename _String_a
+	>
+	bool
+	operator!=
+	(	compound_wrapper
+		<	_Variant_a, _Compound_a, _String_a
+		> const &a
+	) const
+	{
+		return !this->operator==(a);
+	}
+
+	void
+	swap(compound_wrapper &a) noexcept
+	{
+		auto const tmp = this->cont;
+		this->cont = a.cont;
+		a.cont = tmp;
+	}
+
+	void
+	swap(compound_wrapper &&a) noexcept
+	{
+		this->operator=(std::forward(a));
+	}
+
+	friend void
+	swap(compound_wrapper &a, compound_wrapper &b) noexcept
+	{
+		return a.swap(b);
+	}
+
+	friend void
+	swap(compound_wrapper &a, compound_wrapper &&b) noexcept
+	{
+		a.operator=(std::forward(b));
+	}
+
+	friend void
+	swap(compound_wrapper &&a, compound_wrapper &b) noexcept
+	{
+		b.operator=(std::forward(a));
+	}
+
+	inline size_type
+	size(void) const
+	{
+		return this->cont->size();
+	}
+	
+	inline size_type
+	max_size(void) const
+	{
+		return this->cont->max_size();
+	}
+
+	inline bool
+	empty(void) const
+	{
+		return this->cont->empty();
+	}
+
+	inline mapped_type
+	operator[](key_type const &n) const
+	{
+		if
+		(	auto const &it = this->cont->find(n)
+		;	it != this->cont->cend()
+		)
+			return mapped_type
+			(	iterator(it)->second.get()
+			,	[] (_Variant *) {}
+			);
+		else
+			return mapped_type
+			(	nullptr
+			,	[] (_Variant *) {}
+			);
+	}
+
+	inline mapped_type
+	at(key_type const &n) const
+	{
+		if
+		(	auto const &it = this->cont->find(n)
+		;	it != this->cont->cend()
+		)
+			return mapped_type
+			(	iterator(it)->second.get()
+			,	[] (_Variant *) {}
+			);
+		else
+			throw std::out_of_range
+			(	"nbt::detail::compound_wrapper"
+			);
+	}
+};
+
 } // detail
 
 constexpr struct
@@ -390,6 +665,26 @@ constexpr struct
 		);
 	}
 } list;
+
+constexpr struct
+{
+	constexpr operator std::size_t() const
+	{
+		return 9;
+	}
+
+	template
+	<	typename _Variant
+	,	typename _Tp = std::variant_alternative_t<9, _Variant>
+	>
+	auto
+	inline operator()(std::unique_ptr<_Variant> const &nbt) const
+	{
+		return detail::compound_wrapper<_Variant, _Tp>
+		(	std::get_if<9>(nbt.get())
+		);
+	}
+} compound;
 
 # undef NBT_GETTER__BUILDER_
 

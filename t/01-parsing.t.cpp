@@ -14,17 +14,14 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#define NBT_UNIT_TEST_
 #include "nbt.hpp"
 
-#define CATCH_CONFIG_RUNNER
-#define CATCH_CONFIG_FAST_COMPILE
-#define CATCH_CONFIG_DISABLE_MATCHERS
-#define CATCH_CONFIG_DEFAULT_REPORTER "tap"
 #include "catch.hpp"
-#include "catch_reporter_tap.hpp"
 
 #include <algorithm>
 #include <array>
+#include <sstream>
 #include <type_traits>
 #include <variant>
 #include <cmath>
@@ -446,15 +443,4 @@ TEST_CASE( "parsing TAG_List" )
 			)
 		);
 	}
-}
-
-int
-main(int argc, char const * const *argv)
-{
-	Catch::Session session;
-	if (auto ret = session.applyCommandLine(argc, argv))
-		return ret;
-	// Needed to correct TAP output suitable for prove
-	session.configData().showSuccessfulTests = true;
-	return session.run();
 }

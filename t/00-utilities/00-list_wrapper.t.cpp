@@ -17,12 +17,7 @@
 #define NBT_UNIT_TEST_
 #include "nbt_utilities.hpp"
 
-#define CATCH_CONFIG_RUNNER
-#define CATCH_CONFIG_FAST_COMPILE
-#define CATCH_CONFIG_DISABLE_MATCHERS
-#define CATCH_CONFIG_DEFAULT_REPORTER "tap"
 #include "catch.hpp"
-#include "catch_reporter_tap.hpp"
 
 #include <array>
 #include <type_traits>
@@ -645,7 +640,7 @@ SCENARIO( "nbt::detail::list_wrapper satisfies Container concept" )
 		{
 			auto const list = make_list<variant>(1, 2, 3);
 			a = &list;
-			THEN( "`a` is empty" )
+			THEN( "`a` contains elements" )
 			{
 				CHECK_FALSE( a.empty() );
 				CHECK
@@ -698,15 +693,4 @@ SCENARIO( "nbt::detail::list_wrapper satisfies some SequenceContainer concepts" 
 			}
 		}
 	}
-}
-
-int
-main(int argc, char const * const *argv)
-{
-	Catch::Session session;
-	if (auto ret = session.applyCommandLine(argc, argv))
-		return ret;
-	// Needed to correct TAP output suitable for prove
-	session.configData().showSuccessfulTests = true;
-	return session.run();
 }
