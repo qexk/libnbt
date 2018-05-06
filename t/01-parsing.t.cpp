@@ -26,7 +26,13 @@
 #include <variant>
 #include <cmath>
 #include <cstdint>
-/*
+
+auto
+make_stream(char const *s, std::size_t const len)
+{
+	return std::istringstream(std::string(s, len));
+}
+
 TEST_CASE( "parsing TAG_Byte" )
 {
 	SECTION( "valid TAG_Byte" )
@@ -38,7 +44,7 @@ TEST_CASE( "parsing TAG_Byte" )
 		};
 		for (auto const &[s, expected] : tests)
 		{
-			std::istringstream iss(std::string(s, 2));
+			auto iss = make_stream(s, 2);
 			auto parsed = nbt::parse(iss);
 			auto std_get = std::get<nbt::byte>(*parsed);
 			auto nbt_fun = nbt::byte(parsed);
@@ -72,7 +78,7 @@ TEST_CASE( "parsing TAG_Short" )
 		};
 		for (auto const &[s, expected] : tests)
 		{
-			std::istringstream iss(std::string(s, 3));
+			auto iss = make_stream(s, 3);
 			auto res = nbt::parse(iss);
 			auto std_get = std::get<nbt::short_>(*res);
 			auto nbt_fun = nbt::short_(res);
@@ -106,7 +112,7 @@ TEST_CASE( "parsing TAG_Int" )
 		};
 		for (auto const &[s, expected] : tests)
 		{
-			std::istringstream iss(std::string(s, 5));
+			auto iss = make_stream(s, 5);
 			auto res = nbt::parse(iss);
 			auto std_get = std::get<nbt::int_>(*res);
 			auto nbt_fun = nbt::int_(res);
@@ -149,7 +155,7 @@ TEST_CASE( "parsing TAG_Long" )
 		};
 		for (auto const &[s, expected] : tests)
 		{
-			std::istringstream iss(std::string(s, 9));
+			auto iss = make_stream(s, 9);
 			auto res = nbt::parse(iss);
 			auto std_get = std::get<nbt::long_>(*res);
 			auto nbt_fun = nbt::long_(res);
@@ -200,7 +206,7 @@ TEST_CASE( "parsing TAG_Float" )
 		};
 		for (auto const &[s, expected] : tests)
 		{
-			std::istringstream iss(std::string(s, 5));
+			auto iss = make_stream(s, 5);
 			auto res = nbt::parse(iss);
 			auto std_get = std::get<nbt::float_>(*res);
 			auto nbt_fun = nbt::float_(res);
@@ -275,7 +281,7 @@ TEST_CASE( "parsing TAG_Double" )
 		};
 		for (auto const &[s, expected] : tests)
 		{
-			std::istringstream iss(std::string(s, 9));
+			auto iss = make_stream(s, 9);
 			auto res = nbt::parse(iss);
 			auto std_get = std::get<nbt::double_>(*res);
 			auto nbt_fun = nbt::double_(res);
@@ -327,7 +333,7 @@ TEST_CASE( "parsing TAG_Byte_Array" )
 		};
 		for (auto const &[s, len, expected] : tests)
 		{
-			std::istringstream iss(std::string(s, len));
+			auto iss = make_stream(s, len);
 			auto res = nbt::parse(iss);
 			auto std_get = std::get<nbt::byte_array>(*res);
 			auto nbt_fun = nbt::byte_array(res);
@@ -354,7 +360,7 @@ TEST_CASE( "parsing TAG_String" )
 		};
 		for (auto const &[s, len, expected] : tests)
 		{
-			std::istringstream iss(std::string(s, len));
+			auto iss = make_stream(s, len);
 			auto res = nbt::parse(iss);
 			auto std_get = std::get<nbt::string>(*res);
 			auto nbt_fun = nbt::string(res);
@@ -363,12 +369,6 @@ TEST_CASE( "parsing TAG_String" )
 			CHECK( nbt_fun == expected );
 		}
 	}
-}*/
-
-auto
-make_stream(char const *s, std::size_t const len)
-{
-	return std::istringstream(std::string(s, len));
 }
 
 TEST_CASE( "parsing TAG_List" )
@@ -436,8 +436,7 @@ TEST_CASE( "parsing TAG_List" )
 						nbt::list.as<nbt::byte>(v);
 					return std::equal
 					(	l.begin(), l.end()
-					,	std::vector<int>{1, 2, 3}
-							.begin()
+					,	std::vector{1, 2, 3}.begin()
 					);
 				}
 			)
