@@ -443,3 +443,84 @@ TEST_CASE( "parsing TAG_List" )
 		);
 	}
 }
+
+TEST_CASE( "parsing TAG_Compound" )
+{
+	SECTION( "empty TAG_Compound" )
+	{
+		auto iss = make_stream("\x0A""\x00", 2);
+		auto res = nbt::parse(iss);
+		auto &std_get = std::get<nbt::compound>(*res);
+		auto nbt_fun = nbt::compound(res);
+		CHECK( std_get.size() == 0 );
+		CHECK( nbt_fun.size() == 0 );
+	}
+	SECTION( "Notch's `Hello World' example in explicit form" )
+	{
+		auto iss = make_stream
+(	"\x0A"
+		"\x0A"
+		"\x00\x0B"
+		"\x68\x65\x6C\x6C\x6F\x20\x77\x6F\x72\x6C\x64"
+			"\x08"
+			"\x00\x04"
+			"\x6E\x61\x6D\x65"
+				"\x00\x09"
+				"\x42\x61\x6E\x61\x6E\x72\x61\x6D\x61"
+		"\x00"
+	"\x00"
+,	35
+);
+		auto res = nbt::parse(iss);
+		auto nbt = nbt::compound(res);
+		CHECK( nbt.size() == 1 );
+		CHECK( nbt.begin()->first == "hello world" );
+		CHECK( nbt::compound(nbt["hello world"]).size() == 1 );
+		CHECK
+		(	nbt::compound(nbt["hello world"]).begin()->first
+			== "name"
+		);
+		CHECK
+		(	nbt::string
+			(	nbt::compound(nbt["hello world"])["name"]
+			) == "Bananrama"
+		);
+	}
+	SECTION( R"(TAG_Compound as {{"vivalalgerie", {1, 2, 3}}, {"Shrek movies", {2001, 2004, 2007, 2010, 2019}}})" )
+	{
+		auto iss = make_stream
+(	"\x0A"
+		"\x09"
+		"\x00\x0C"
+		"\x76\x69\x76\x61\x6C\x61\x6C\x67\x65\x72\x69\x65"
+		"\x03"
+		"\x00\x00\x00\x03"
+			"\x00\x00\x00\x01"
+			"\x00\x00\x00\x02"
+			"\x00\x00\x00\x03"
+		"\x09"
+		"\x00\x0C"
+		"\x53\x68\x72\x65\x6B\x20\x6D\x6F\x76\x69\x65\x73"
+		"\x03"
+		"\x00\x00\x00\x05"
+			"\x00\x00\x07\xD1"
+			"\x00\x00\x07\xD4"
+			"\x00\x00\x07\xD7"
+			"\x00\x00\x07\xDA"
+			"\x00\x00\x07\xE3"
+	"\x00"
+,	74
+);
+		auto res = nbt::parse(iss);
+		auto nbt = nbt::compound(res);
+		CHECK( nbt.size() == 2 );
+		CHECK( nbt::list.as<nbt::int_>(nbt["vivalalgerie"])[0] == 1 );
+		CHECK( nbt::list.as<nbt::int_>(nbt["vivalalgerie"])[1] == 2 );
+		CHECK( nbt::list.as<nbt::int_>(nbt["vivalalgerie"])[2] == 3 );
+		CHECK( nbt::list.as<nbt::int_>(nbt["Shrek movies"])[0] == 2001);
+		CHECK( nbt::list.as<nbt::int_>(nbt["Shrek movies"])[1] == 2004);
+		CHECK( nbt::list.as<nbt::int_>(nbt["Shrek movies"])[2] == 2007);
+		CHECK( nbt::list.as<nbt::int_>(nbt["Shrek movies"])[3] == 2010);
+		CHECK( nbt::list.as<nbt::int_>(nbt["Shrek movies"])[4] == 2019);
+	}
+}
