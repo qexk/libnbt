@@ -44,7 +44,7 @@ constexpr struct                                                         \
 		&& std::is_copy_constructible_v<_Tp>                     \
 		&& std::is_copy_assignable_v<_Tp>                        \
 	,	_Tp                                                      \
-	,	std::add_lvalue_reference_t<_Tp>                         \
+	,	_Tp const &                                              \
 	>                                                                \
 	operator()(std::unique_ptr<_Variant> const &nbt) const           \
 	{                                                                \
@@ -60,7 +60,7 @@ constexpr struct                                                         \
 		&& std::is_copy_constructible_v<_Tp>                     \
 		&& std::is_copy_assignable_v<_Tp>                        \
 	,	_Tp                                                      \
-	,	std::add_lvalue_reference_t<_Tp>                         \
+	,	_Tp const &                                              \
 	>                                                                \
 	operator()(_Variant const *nbt) const                            \
 	{                                                                \

@@ -650,6 +650,10 @@ loop:
 			ss.push(state::NTS);
 			goto loop;
 		}
+	case 'AE':
+		in.get();
+		ss.pop();
+		goto loop;
 	case 'B':
 		in.get();
 		ss.pop();
