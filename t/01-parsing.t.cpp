@@ -524,3 +524,90 @@ TEST_CASE( "parsing TAG_Compound" )
 		CHECK( nbt::list.as<nbt::int_>(nbt["Shrek movies"])[4] == 2019);
 	}
 }
+
+TEST_CASE( "parsing TAG_Int_Array" )
+{
+	SECTION( "valid TAG_Int_Array" )
+	{
+		using cont = std::vector<std::int_least32_t>;
+		std::array tests =
+		{	std::tuple
+			(	"\x0B""\x00\x00\x00\x00", 5
+			,	cont{}
+			)
+		,	std::tuple
+			(	"\x0B""\xFF\xFF\xFF\xFF", 5
+			,	cont{}
+			)
+		,	std::tuple
+			(	"\x0B""\x00\x00\x00\x04"
+					"\x00\x0F\xFF\xFF"
+					"\x00\x1F\xFF\xFF"
+					"\x00\x3F\xFF\xFF"
+					"\x00\x7F\xFF\xFF"
+			,	21
+			,	cont{1048575, 2097151, 4194303, 8388607}
+			)
+		};
+		for (auto const &[s, len, expected] : tests)
+		{
+			auto iss = make_stream(s, len);
+			auto res = nbt::parse(iss);
+			auto std_get = std::get<nbt::int_array>(*res);
+			auto nbt_fun = nbt::int_array(res);
+			CHECK( std_get == nbt_fun );
+			CHECK( std_get == expected );
+			CHECK( nbt_fun == expected );
+		}
+	}
+}
+
+TEST_CASE( "parsing TAG_Long_Array" )
+{
+	SECTION( "valid TAG_Long_Array" )
+	{
+		using cont = std::vector<std::int_least64_t>;
+		std::array tests =
+		{	std::tuple
+			(	"\x0C""\x00\x00\x00\x00", 5
+			,	cont{}
+			)
+		,	std::tuple
+			(	"\x0C""\xFF\xFF\xFF\xFF", 5
+			,	cont{}
+			)
+		,	std::tuple
+			(	"\x0C""\x00\x00\x00\x08"
+					"\x00\x00\x00\x00\x00\x00\x00\x2A"
+					"\x00\x00\x00\x00\x00\x00\x03\xC0"
+					"\x00\x00\x00\x00\x00\xC6\xC6\xB8"
+					"\x00\x00\x00\x00\x32\x97\xB9\xBC"
+					"\x00\x00\x00\x94\xBC\x54\x5F\xE0"
+					"\x00\x00\x07\x75\x4C\x94\x1F\x6B"
+					"\x00\x4E\x9F\x4C\xEE\xAE\xE2\x4E"
+					"\xA3\xF1\x39\xE3\x8F\x77\x5C\x5A"
+			,	69
+			,	cont
+				{	42L
+				,	960L
+				,	13027000L
+				,	848804284L
+				,	638814805984L
+				,	8200377343851L
+				,	22130200954200654L
+				,	-6633457126612706214L
+				}
+			)
+		};
+		for (auto const &[s, len, expected] : tests)
+		{
+			auto iss = make_stream(s, len);
+			auto res = nbt::parse(iss);
+			auto std_get = std::get<nbt::long_array>(*res);
+			auto nbt_fun = nbt::long_array(res);
+			CHECK( std_get == nbt_fun );
+			CHECK( std_get == expected );
+			CHECK( nbt_fun == expected );
+		}
+	}
+}

@@ -666,20 +666,28 @@ loop:
 		goto loop;
 	case 'BB':
 		{
-			auto const &count = std::get<2>(*ret.front());
-			auto const len = count * 4;
-			auto const buf = std::make_unique<_In_char[]>(len);
-			in.read(buf.get(), len);
+			auto const count = std::get<2>(*ret.front());
 			_Int_array_type cont;
-			if constexpr(detail::has_reserve<_Int_array_type>)
-				cont.reserve(len);
-			auto inserter = std::back_inserter(cont);
-			for (auto i = 0; i < count; ++i)
-				inserter = static_cast<_Int>
-				(	detail::b4tos32
-					(	buf.get() + i * 4
-					)
-				);
+			if (count > 0)
+			{
+				auto const len = count * 4;
+				auto const buf =
+					std::make_unique<_In_char[]>(len);
+				in.read(buf.get(), len);
+				if constexpr
+				(	detail::has_reserve
+					<	_Int_array_type
+					>
+				)
+					cont.reserve(count);
+				auto inserter = std::back_inserter(cont);
+				for (auto i = 0; i < count; ++i)
+					inserter = static_cast<_Int>
+					(	detail::b4tos32
+						(	buf.get() + i * 4
+						)
+					);
+			}
 			_Node * const node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
@@ -702,20 +710,28 @@ loop:
 		goto loop;
 	case 'CB':
 		{
-			auto const &count = std::get<2>(*ret.front());
-			auto const len = count * 8;
-			auto const buf = std::make_unique<_In_char[]>(len);
-			in.read(buf.get(), len);
+			auto const count = std::get<2>(*ret.front());
 			_Long_array_type cont;
-			if constexpr(detail::has_reserve<_Long_array_type>)
-				cont.reserve(len);
-			auto inserter = std::back_inserter(cont);
-			for (auto i = 0; i < count; ++i)
-				inserter = static_cast<_Int>
-				(	detail::b8tos64
-					(	buf.get() + i * 8
-					)
-				);
+			if (count > 0)
+			{
+				auto const len = count * 8;
+				auto const buf =
+					std::make_unique<_In_char[]>(len);
+				in.read(buf.get(), len);
+				if constexpr
+				(	detail::has_reserve
+					<	_Long_array_type
+					>
+				)
+					cont.reserve(len);
+				auto inserter = std::back_inserter(cont);
+				for (auto i = 0; i < count; ++i)
+					inserter = static_cast<_Long>
+					(	detail::b8tos64
+						(	buf.get() + i * 8
+						)
+					);
+			}
 			_Node * const node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
