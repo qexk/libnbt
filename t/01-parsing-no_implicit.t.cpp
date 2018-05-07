@@ -396,12 +396,7 @@ TEST_CASE( "parsing TAG_List" )
 		auto nbt_fun = nbt::list.as<nbt::byte>(res);
 		CHECK( std_get.size() == 3 );
 		CHECK( nbt_fun.size() == 3 );
-		CHECK
-		(	std::equal
-			(	nbt_fun.begin(), nbt_fun.end()
-			,	std::vector<int>{1, 2, 3}.begin()
-			)
-		);
+		CHECK( nbt_fun == std::vector<int>{1, 2, 3} );
 		CHECK
 		(	std::equal
 			(	std_get.begin(), std_get.end()

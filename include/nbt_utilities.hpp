@@ -283,9 +283,19 @@ public:
 		return
 			this->cont == a.cont
 			|| std::equal
-			(	this->begin(), this->end()
-			,	a.begin(), a.end()
+			(	this->cbegin(), this->cend()
+			,	a.cbegin(), a.cend()
 			);
+	}
+
+	template <class _Container>
+	bool
+	operator==(_Container const &c) const
+	{
+		return	std::equal
+		(	this->cbegin(), this->cend()
+		,	c.cbegin(), c.cend()
+		);
 	}
 
 	template
