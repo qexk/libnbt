@@ -212,8 +212,14 @@ NBT_HAS__BUILDER_( try_emplace );
 # undef NBT_HAS__BUILDER_
 } // detail
 
+enum class parsing
+{	implicit_compound
+,	no_implicit
+};
+
 template
-<	template <class> typename _Allocator = std::allocator
+<	parsing _Policy = parsing::implicit_compound
+,	template <class> typename _Allocator = std::allocator
 ,	typename _Char = char
 ,	typename _Byte = std::int_least8_t
 ,	typename _Short = std::int_least16_t
@@ -277,10 +283,11 @@ parse
 	static constexpr typename _In_traits::int_type tag_ina{0x0B};
 	static constexpr typename _In_traits::int_type tag_lna{0x0C};
 	using detail::state;
-	std::unordered_map
-	<	state
-	,	detail::default_map<typename _In_traits::int_type, int>
-	> const trans =
+	using _Byte_to_case = detail::default_map
+	<	typename _In_traits::int_type
+	,	int
+	>;
+	std::unordered_map<state, _Byte_to_case> const trans =
 	{	{ state::F, {{ _In_traits::eof(), '0' }} }
 	,	{	state::S
 		,	{	{ tag_byt,  '1' }
@@ -298,9 +305,16 @@ parse
 			}
 		}
 	,	{	state::NTS
-		,	{	{ tag_nul,  'AE' }
-			,	{ detail::_, 'AB' }
-			}
+		,	_Policy == parsing::implicit_compound
+			?	_Byte_to_case
+				{	{ tag_nul,  'AE' }
+				,	{ _In_traits::eof(), '0' }
+				,	{ detail::_, 'AB' }
+				}
+			:	_Byte_to_case
+				{	{ tag_nul,  'AE' }
+				,	{ detail::_, 'AB' }
+				}
 		}
 	,	{ state::S1,  {{ detail::_, '1A' }} }
 	,	{ state::S2,  {{ detail::_, '2A' }} }
@@ -333,8 +347,15 @@ parse
 
 	std::deque<_Node_ptr> ret;
 	std::stack<state> ss;
-	ss.push(state::F);
-	ss.push(state::S);
+	if constexpr (_Policy == parsing::implicit_compound)
+	{
+		ss.push(state::SA);
+	}
+	else
+	{
+		ss.push(state::F);
+		ss.push(state::S);
+	}
 
 loop:
 	switch (trans.at(ss.top()).at(in.peek()))

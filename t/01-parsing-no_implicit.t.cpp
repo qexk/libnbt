@@ -45,9 +45,9 @@ TEST_CASE( "parsing TAG_Byte" )
 		for (auto const &[s, expected] : tests)
 		{
 			auto iss = make_stream(s, 2);
-			auto parsed = nbt::parse(iss);
-			auto std_get = std::get<nbt::byte>(*parsed);
-			auto nbt_fun = nbt::byte(parsed);
+			auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
+			auto std_get = std::get<nbt::byte>(*res);
+			auto nbt_fun = nbt::byte(res);
 			CHECK
 			(	std::is_convertible_v
 				<	decltype(std_get)
@@ -79,7 +79,7 @@ TEST_CASE( "parsing TAG_Short" )
 		for (auto const &[s, expected] : tests)
 		{
 			auto iss = make_stream(s, 3);
-			auto res = nbt::parse(iss);
+			auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 			auto std_get = std::get<nbt::short_>(*res);
 			auto nbt_fun = nbt::short_(res);
 			CHECK
@@ -113,7 +113,7 @@ TEST_CASE( "parsing TAG_Int" )
 		for (auto const &[s, expected] : tests)
 		{
 			auto iss = make_stream(s, 5);
-			auto res = nbt::parse(iss);
+			auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 			auto std_get = std::get<nbt::int_>(*res);
 			auto nbt_fun = nbt::int_(res);
 			CHECK
@@ -156,7 +156,7 @@ TEST_CASE( "parsing TAG_Long" )
 		for (auto const &[s, expected] : tests)
 		{
 			auto iss = make_stream(s, 9);
-			auto res = nbt::parse(iss);
+			auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 			auto std_get = std::get<nbt::long_>(*res);
 			auto nbt_fun = nbt::long_(res);
 			CHECK
@@ -207,7 +207,7 @@ TEST_CASE( "parsing TAG_Float" )
 		for (auto const &[s, expected] : tests)
 		{
 			auto iss = make_stream(s, 5);
-			auto res = nbt::parse(iss);
+			auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 			auto std_get = std::get<nbt::float_>(*res);
 			auto nbt_fun = nbt::float_(res);
 			CHECK
@@ -282,7 +282,7 @@ TEST_CASE( "parsing TAG_Double" )
 		for (auto const &[s, expected] : tests)
 		{
 			auto iss = make_stream(s, 9);
-			auto res = nbt::parse(iss);
+			auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 			auto std_get = std::get<nbt::double_>(*res);
 			auto nbt_fun = nbt::double_(res);
 			CHECK
@@ -334,7 +334,7 @@ TEST_CASE( "parsing TAG_Byte_Array" )
 		for (auto const &[s, len, expected] : tests)
 		{
 			auto iss = make_stream(s, len);
-			auto res = nbt::parse(iss);
+			auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 			auto std_get = std::get<nbt::byte_array>(*res);
 			auto nbt_fun = nbt::byte_array(res);
 			CHECK( std_get == nbt_fun );
@@ -361,7 +361,7 @@ TEST_CASE( "parsing TAG_String" )
 		for (auto const &[s, len, expected] : tests)
 		{
 			auto iss = make_stream(s, len);
-			auto res = nbt::parse(iss);
+			auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 			auto std_get = std::get<nbt::string>(*res);
 			auto nbt_fun = nbt::string(res);
 			CHECK( std_get == nbt_fun );
@@ -379,7 +379,7 @@ TEST_CASE( "parsing TAG_List" )
 		(	"\x09""\x00""\x00\x00\x00\x00"
 		,	6
 		);
-		auto res = nbt::parse(iss);
+		auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 		auto &std_get = std::get<nbt::list>(*res);
 		auto nbt_fun = nbt::list(res);
 		CHECK( std_get.size() == 0 );
@@ -391,7 +391,7 @@ TEST_CASE( "parsing TAG_List" )
 		(	"\x09""\x01""\x00\x00\x00\x03""\x01\x02\x03"
 		,	9
 		);
-		auto res = nbt::parse(iss);
+		auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 		auto &std_get = std::get<nbt::list>(*res);
 		auto nbt_fun = nbt::list.as<nbt::byte>(res);
 		CHECK( std_get.size() == 3 );
@@ -423,7 +423,7 @@ TEST_CASE( "parsing TAG_List" )
 				"\x01""\x00\x00\x00\x03""\x01\x02\x03"
 		,	30
 		);
-		auto res = nbt::parse(iss);
+		auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 		auto &std_get = std::get<nbt::list>(*res);
 		auto nbt_fun = nbt::list.as<nbt::list>(res);
 		CHECK( std_get.size() == 3 );
@@ -449,7 +449,7 @@ TEST_CASE( "parsing TAG_Compound" )
 	SECTION( "empty TAG_Compound" )
 	{
 		auto iss = make_stream("\x0A""\x00", 2);
-		auto res = nbt::parse(iss);
+		auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 		auto &std_get = std::get<nbt::compound>(*res);
 		auto nbt_fun = nbt::compound(res);
 		CHECK( std_get.size() == 0 );
@@ -471,7 +471,7 @@ TEST_CASE( "parsing TAG_Compound" )
 	"\x00"
 ,	35
 );
-		auto res = nbt::parse(iss);
+		auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 		auto nbt = nbt::compound(res);
 		CHECK( nbt.size() == 1 );
 		CHECK( nbt.begin()->first == "hello world" );
@@ -511,7 +511,7 @@ TEST_CASE( "parsing TAG_Compound" )
 	"\x00"
 ,	74
 );
-		auto res = nbt::parse(iss);
+		auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 		auto nbt = nbt::compound(res);
 		CHECK( nbt.size() == 2 );
 		CHECK( nbt::list.as<nbt::int_>(nbt["vivalalgerie"])[0] == 1 );
@@ -552,7 +552,7 @@ TEST_CASE( "parsing TAG_Int_Array" )
 		for (auto const &[s, len, expected] : tests)
 		{
 			auto iss = make_stream(s, len);
-			auto res = nbt::parse(iss);
+			auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 			auto std_get = std::get<nbt::int_array>(*res);
 			auto nbt_fun = nbt::int_array(res);
 			CHECK( std_get == nbt_fun );
@@ -602,7 +602,7 @@ TEST_CASE( "parsing TAG_Long_Array" )
 		for (auto const &[s, len, expected] : tests)
 		{
 			auto iss = make_stream(s, len);
-			auto res = nbt::parse(iss);
+			auto res = nbt::parse<nbt::parsing::no_implicit>(iss);
 			auto std_get = std::get<nbt::long_array>(*res);
 			auto nbt_fun = nbt::long_array(res);
 			CHECK( std_get == nbt_fun );
