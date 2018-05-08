@@ -45,11 +45,10 @@ struct integer_list_hash
 	std::size_t
 	operator()(_List const &l) const noexcept
 	{
-		std::size_t _Seed = std::distance(l.cbegin(), l.cend());
+		std::size_t seed = std::distance(l.cbegin(), l.cend());
 		for (auto const &_I : l)
-			_Seed ^= _I + 0x9e3779b9 +
-				(_Seed << 6) + (_Seed >> 2);
-		return _Seed;
+			seed ^= _I + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		return seed;
 	}
 };
 
@@ -287,8 +286,8 @@ parse
 	<	typename _In_traits::int_type
 	,	int
 	>;
-	std::unordered_map<state, _Byte_to_case> const trans =
-	{	{ state::F, {{ _In_traits::eof(), '0' }} }
+	std::unordered_map<state, _Byte_to_case> const trans
+	 = {	{ state::F, {{ _In_traits::eof(), '0' }} }
 	,	{	state::S
 		,	{	{ tag_byt,  '1' }
 			,	{ tag_sht,  '2' }
@@ -484,12 +483,14 @@ loop:
 		goto loop;
 	case '7B':
 		{
-			auto const &len = std::get<2>(*ret.front());
 			_Byte_array_type cont;
+			auto const len = *std::get_if<2>(ret.front().get());
 			if (len > 0)
 			{
-				auto const buf =
-					std::make_unique<_In_char[]>(len);
+				auto const buf
+					 = std::make_unique<_In_char[]>
+					 (	len
+					 );
 				in.read(buf.get(), len);
 				if constexpr
 				(	detail::has_reserve
@@ -524,7 +525,8 @@ loop:
 		goto loop;
 	case '8B':
 		{
-			std::size_t const len = std::get<1>(*ret.front());
+			std::size_t const len
+				 = *std::get_if<1>(ret.front().get());
 			auto const buf = std::make_unique<_In_char[]>(len);
 			in.read(buf.get(), len);
 			_String_type cont;
@@ -565,10 +567,13 @@ loop:
 		}
 	case '9B':
 		{
-			auto const &count = std::get<2>(*ret.front());
-			auto const &tag = std::get<0>(*ret[1]);
+			auto const count
+				 = *std::get_if<2>(ret.front().get());
+			auto const tag
+				 = *std::get_if<0>(ret[1].get());
 			if constexpr (detail::has_reserve<_List_type>)
-				std::get<8>(*ret[2]).reserve(count);
+				std::get_if<8>(ret[2].get())
+					->reserve(count);
 			ss.pop();
 			if (count > 0 && tag != tag_nul)
 			{
@@ -585,8 +590,8 @@ loop:
 	case '9C':
 		{
 			auto &count = std::get<2>(*ret[1]);
-			auto const &tag = std::get<0>(*ret[2]);
-			std::get<8>(*ret[3]).emplace_back
+			auto const tag = *std::get_if<0>(ret[2].get());
+			std::get_if<8>(ret[3].get())->emplace_back
 			(	reinterpret_cast<void *>
 				(	ret.front().release()
 				)
@@ -631,7 +636,7 @@ loop:
 		goto loop;
 	case 'NT':
 		{
-			auto const &tag = std::get<0>(*ret[1]);
+			auto const tag = *std::get_if<0>(ret[1].get());
 			ss.pop();
 			ss.push(state::SAB);
 			ss.push(detail::state_of_tag(tag));
@@ -643,8 +648,8 @@ loop:
 			(	detail::has_try_emplace<_Compound_type>
 			)
 			{
-				std::get<9>(*ret[3]).try_emplace
-				(	std::get<7>(*ret[1])
+				std::get_if<9>(ret[3].get())->try_emplace
+				(	*std::get_if<7>(ret[1].get())
 				,	reinterpret_cast<void *>
 					(	ret.front().release()
 					)
@@ -659,8 +664,8 @@ loop:
 					)
 				,	deleter
 				);
-				std::get<9>(*ret[3]).emplace
-				(	std::get<7>(*ret[1])
+				std::get_if<9>(ret[3].get())->emplace
+				(	*std::get_if<7>(ret[1].get())
 				,	std::move(value)
 				);
 			}
@@ -687,13 +692,16 @@ loop:
 		goto loop;
 	case 'BB':
 		{
-			auto const count = std::get<2>(*ret.front());
+			auto const count
+				= *std::get_if<2>(ret.front().get());
 			_Int_array_type cont;
 			if (count > 0)
 			{
 				auto const len = count * 4;
-				auto const buf =
-					std::make_unique<_In_char[]>(len);
+				auto const buf
+					= std::make_unique<_In_char[]>
+					(	len
+					);
 				in.read(buf.get(), len);
 				if constexpr
 				(	detail::has_reserve
@@ -731,13 +739,16 @@ loop:
 		goto loop;
 	case 'CB':
 		{
-			auto const count = std::get<2>(*ret.front());
+			auto const count
+				= *std::get_if<2>(ret.front().get());
 			_Long_array_type cont;
 			if (count > 0)
 			{
 				auto const len = count * 8;
-				auto const buf =
-					std::make_unique<_In_char[]>(len);
+				auto const buf
+					= std::make_unique<_In_char[]>
+					(	len
+					);
 				in.read(buf.get(), len);
 				if constexpr
 				(	detail::has_reserve
