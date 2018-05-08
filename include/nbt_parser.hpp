@@ -56,58 +56,127 @@ template <typename _Char>
 static inline std::uint16_t
 b2tos16(_Char const *buf)
 {
-	return
+	union
+	{
+		std::uint8_t byte[2];
+		std::uint16_t val;
+	} conv;
 #if '\x11\x22\x33\x44' == 0x11'22'33'44
-		(static_cast<std::uint32_t>(buf[0]) << 010 & 0xFF00) |
-		(static_cast<std::uint32_t>(buf[1]) & 0x00FF);
+	conv.byte[0] = static_cast<std::uint8_t>(buf[1] & 0xFF);
+	conv.byte[1] = static_cast<std::uint8_t>(buf[0] & 0xFF);
 #else
-		(static_cast<std::uint32_t>(buf[1]) << 010 & 0xFF00) |
-		(static_cast<std::uint32_t>(buf[0]) & 0x00FF);
+	conv.byte[0] = static_cast<std::uint8_t>(buf[0] & 0xFF);
+	conv.byte[1] = static_cast<std::uint8_t>(buf[1] & 0xFF);
 #endif
+	return conv.val;
 }
 
 template <typename _Char>
 static inline std::uint32_t
 b4tos32(_Char const *buf)
 {
-	return
+	union
+	{
+		std::uint8_t byte[4];
+		std::uint32_t val;
+	} conv;
 #if '\x11\x22\x33\x44' == 0x11'22'33'44
-		(static_cast<std::uint32_t>(buf[0]) << 030 & 0xFF000000) |
-		(static_cast<std::uint32_t>(buf[1]) << 020 & 0x00FF0000) |
-		(static_cast<std::uint32_t>(buf[2]) << 010 & 0x0000FF00) |
-		(static_cast<std::uint32_t>(buf[3]) & 0x000000FF);
+	conv.byte[0] = static_cast<std::uint8_t>(buf[3] & 0xFF);
+	conv.byte[1] = static_cast<std::uint8_t>(buf[2] & 0xFF);
+	conv.byte[2] = static_cast<std::uint8_t>(buf[1] & 0xFF);
+	conv.byte[3] = static_cast<std::uint8_t>(buf[0] & 0xFF);
 #else
-		(static_cast<std::uint32_t>(buf[3]) << 030 & 0xFF000000) |
-		(static_cast<std::uint32_t>(buf[2]) << 020 & 0x00FF0000) |
-		(static_cast<std::uint32_t>(buf[1]) << 010 & 0x0000FF00) |
-		(static_cast<std::uint32_t>(buf[0]) & 0x000000FF);
+	conv.byte[0] = static_cast<std::uint8_t>(buf[0] & 0xFF);
+	conv.byte[1] = static_cast<std::uint8_t>(buf[1] & 0xFF);
+	conv.byte[2] = static_cast<std::uint8_t>(buf[2] & 0xFF);
+	conv.byte[3] = static_cast<std::uint8_t>(buf[3] & 0xFF);
 #endif
+	return conv.val;
 }
 
 template <typename _Char>
 static inline std::uint64_t
 b8tos64(_Char const *buf)
 {
-	return
+	union
+	{
+		std::uint8_t byte[8];
+		std::uint64_t val;
+	} conv;
 #if '\x11\x22\x33\x44' == 0x11'22'33'44
-		(static_cast<std::uint64_t>(buf[0]) << 070 & 0xFFL << 070) |
-		(static_cast<std::uint64_t>(buf[1]) << 060 & 0xFFL << 060) |
-		(static_cast<std::uint64_t>(buf[2]) << 050 & 0xFFL << 050) |
-		(static_cast<std::uint64_t>(buf[3]) << 040 & 0xFFL << 040) |
-		(static_cast<std::uint64_t>(buf[4]) << 030 & 0xFFL << 030) |
-		(static_cast<std::uint64_t>(buf[5]) << 020 & 0xFFL << 020) |
-		(static_cast<std::uint64_t>(buf[6]) << 010 & 0xFFL << 010) |
-		(static_cast<std::uint64_t>(buf[7]) & 0xFFL);
+	conv.byte[0] = static_cast<std::uint8_t>(buf[7] & 0xFF);
+	conv.byte[1] = static_cast<std::uint8_t>(buf[6] & 0xFF);
+	conv.byte[2] = static_cast<std::uint8_t>(buf[5] & 0xFF);
+	conv.byte[3] = static_cast<std::uint8_t>(buf[4] & 0xFF);
+	conv.byte[4] = static_cast<std::uint8_t>(buf[3] & 0xFF);
+	conv.byte[5] = static_cast<std::uint8_t>(buf[2] & 0xFF);
+	conv.byte[6] = static_cast<std::uint8_t>(buf[1] & 0xFF);
+	conv.byte[7] = static_cast<std::uint8_t>(buf[0] & 0xFF);
 #else
-		(static_cast<std::uint64_t>(buf[7]) << 070 & 0xFFL << 070) |
-		(static_cast<std::uint64_t>(buf[6]) << 060 & 0xFFL << 060) |
-		(static_cast<std::uint64_t>(buf[5]) << 050 & 0xFFL << 050) |
-		(static_cast<std::uint64_t>(buf[4]) << 040 & 0xFFL << 040) |
-		(static_cast<std::uint64_t>(buf[3]) << 030 & 0xFFL << 030) |
-		(static_cast<std::uint64_t>(buf[2]) << 020 & 0xFFL << 020) |
-		(static_cast<std::uint64_t>(buf[1]) << 010 & 0xFFL << 010) |
-		(static_cast<std::uint64_t>(buf[0]) & 0xFFL);
+	conv.byte[0] = static_cast<std::uint8_t>(buf[0] & 0xFF);
+	conv.byte[1] = static_cast<std::uint8_t>(buf[1] & 0xFF);
+	conv.byte[2] = static_cast<std::uint8_t>(buf[2] & 0xFF);
+	conv.byte[3] = static_cast<std::uint8_t>(buf[3] & 0xFF);
+	conv.byte[4] = static_cast<std::uint8_t>(buf[4] & 0xFF);
+	conv.byte[5] = static_cast<std::uint8_t>(buf[5] & 0xFF);
+	conv.byte[6] = static_cast<std::uint8_t>(buf[6] & 0xFF);
+	conv.byte[7] = static_cast<std::uint8_t>(buf[7] & 0xFF);
 #endif
+	return conv.val;
+}
+
+template <typename _Char>
+static inline float
+b4toflt(_Char const *buf)
+{
+	union
+	{
+		std::uint8_t byte[4];
+		float val;
+	} conv;
+#if '\x11\x22\x33\x44' == 0x11'22'33'44
+	conv.byte[0] = static_cast<std::uint8_t>(buf[3] & 0xFF);
+	conv.byte[1] = static_cast<std::uint8_t>(buf[2] & 0xFF);
+	conv.byte[2] = static_cast<std::uint8_t>(buf[1] & 0xFF);
+	conv.byte[3] = static_cast<std::uint8_t>(buf[0] & 0xFF);
+#else
+	conv.byte[0] = static_cast<std::uint8_t>(buf[0] & 0xFF);
+	conv.byte[1] = static_cast<std::uint8_t>(buf[1] & 0xFF);
+	conv.byte[2] = static_cast<std::uint8_t>(buf[2] & 0xFF);
+	conv.byte[3] = static_cast<std::uint8_t>(buf[3] & 0xFF);
+#endif
+	return conv.val;
+}
+
+template <typename _Char>
+static inline double
+b8todbl(_Char const *buf)
+{
+	union
+	{
+		std::uint8_t byte[8];
+		double val;
+	} conv;
+#if '\x11\x22\x33\x44' == 0x11'22'33'44
+	conv.byte[0] = static_cast<std::uint8_t>(buf[7] & 0xFF);
+	conv.byte[1] = static_cast<std::uint8_t>(buf[6] & 0xFF);
+	conv.byte[2] = static_cast<std::uint8_t>(buf[5] & 0xFF);
+	conv.byte[3] = static_cast<std::uint8_t>(buf[4] & 0xFF);
+	conv.byte[4] = static_cast<std::uint8_t>(buf[3] & 0xFF);
+	conv.byte[5] = static_cast<std::uint8_t>(buf[2] & 0xFF);
+	conv.byte[6] = static_cast<std::uint8_t>(buf[1] & 0xFF);
+	conv.byte[7] = static_cast<std::uint8_t>(buf[0] & 0xFF);
+#else
+	conv.byte[0] = static_cast<std::uint8_t>(buf[0] & 0xFF);
+	conv.byte[1] = static_cast<std::uint8_t>(buf[1] & 0xFF);
+	conv.byte[2] = static_cast<std::uint8_t>(buf[2] & 0xFF);
+	conv.byte[3] = static_cast<std::uint8_t>(buf[3] & 0xFF);
+	conv.byte[4] = static_cast<std::uint8_t>(buf[4] & 0xFF);
+	conv.byte[5] = static_cast<std::uint8_t>(buf[5] & 0xFF);
+	conv.byte[6] = static_cast<std::uint8_t>(buf[6] & 0xFF);
+	conv.byte[7] = static_cast<std::uint8_t>(buf[7] & 0xFF);
+#endif
+	return conv.val;
 }
 
 enum class state
@@ -438,13 +507,10 @@ loop:
 		{
 			_In_char buf[4];
 			in.read(buf, sizeof(buf));
-			auto repr = detail::b4tos32(buf);
 			_Node *node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
-			,	static_cast<_Float>
-				(	*reinterpret_cast<float *>(&repr)
-				)
+			,	static_cast<_Float>(detail::b4toflt(buf))
 			);
 			ret.push_front(_Node_ptr(node));
 			ss.pop();
@@ -459,13 +525,10 @@ loop:
 		{
 			_In_char buf[8];
 			in.read(buf, sizeof(buf));
-			auto repr = detail::b8tos64(buf);
 			_Node *node = _A::allocate(__a, 1);
 			_A::construct
 			(	__a, node
-			,	static_cast<_Double>
-				(	*reinterpret_cast<double *>(&repr)
-				)
+			,	static_cast<_Double>(detail::b8todbl(buf))
 			);
 			ret.push_front(_Node_ptr(node));
 			ss.pop();
