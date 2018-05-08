@@ -298,6 +298,10 @@ public:
 		b.operator=(std::forward(a));
 	}
 
+	friend void
+	swap(compound_wrapper &&a, compound_wrapper &&b) noexcept
+	{}
+
 	inline size_type
 	size(void) const
 	{
@@ -528,7 +532,7 @@ public:
 	using const_iterator = iterator const;
 
 	list_wrapper()
-	:	cont{&list_wrapper<_Alt, _Variant, _List>::defaulted}
+	:	cont{&list_wrapper::defaulted}
 	{}
 
 	list_wrapper(_List const *cont)
@@ -629,6 +633,22 @@ public:
 	{
 		return a.swap(b);
 	}
+
+	friend void
+	swap(list_wrapper &a, list_wrapper &&b) noexcept
+	{
+		a.operator=(std::forward(b));
+	}
+
+	friend void
+	swap(list_wrapper &&a, list_wrapper &b) noexcept
+	{
+		b.operator=(std::forward(a));
+	}
+
+	friend void
+	swap(list_wrapper &&a, list_wrapper &&b) noexcept
+	{}
 
 	inline size_type
 	size(void) const
