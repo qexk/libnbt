@@ -68,6 +68,8 @@ constexpr struct                                                         \
 	}                                                                \
 } NAME
 
+inline namespace unqualified {
+
 NBT_GETTER__BUILDER_(byte,       0 );
 NBT_GETTER__BUILDER_(short_,     1 );
 NBT_GETTER__BUILDER_(int_,       2 );
@@ -78,6 +80,10 @@ NBT_GETTER__BUILDER_(byte_array, 6 );
 NBT_GETTER__BUILDER_(string,     7 );
 NBT_GETTER__BUILDER_(int_array,  10);
 NBT_GETTER__BUILDER_(long_array, 11);
+
+} // unqualified
+
+# undef NBT_GETTER__BUILDER_
 
 namespace detail {
 
@@ -674,6 +680,8 @@ public:
 
 } // detail
 
+inline namespace unqualified {
+
 constexpr struct
 {
 	constexpr operator std::size_t() const
@@ -764,7 +772,7 @@ constexpr struct
 	}
 } compound;
 
-# undef NBT_GETTER__BUILDER_
+} // unqualified
 
 } // nbt
 
