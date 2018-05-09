@@ -1,1 +1,3 @@
 *.nbt binary
+*.gz binary
+*.zlib binary

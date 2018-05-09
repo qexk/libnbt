@@ -32,6 +32,7 @@ CATCH_HPPS		:=${addprefix $(CATCH_DIR), \
 CXX			:=g++ -std=c++1z
 CPPFLAGS		+=-I $(CATCH_DIR) -I $(INCLUDE_DIR)
 CXXFLAGS		:=-W -Wall -Werror -pedantic -Wno-multichar
+LDLIBS			:=-lboost_iostreams
 
 SRCS			:=t/00-utilities/00-list_wrapper.t.cpp \
 			  t/00-utilities/01-compound_wrapper.t.cpp \
@@ -54,7 +55,7 @@ $(CATCH_DIR)%.hpp:
 $(SRCS): | $(CATCH_HPPS)
 
 %.t: %.t.o t/main.o
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ $(LDLIBS)
 
 .PHONY: clean
 clean:

@@ -34,8 +34,12 @@
 # include <vector>
 # include <cstring>
 
-# include <boost/iostreams/stream.hpp>
-# include <boost/iostreams/device/array.hpp>
+# ifndef NBT_NO_BOOST
+#  include <boost/iostreams/traits.hpp>
+#  include <boost/iostreams/filtering_stream.hpp>
+#  include <boost/iostreams/filter/gzip.hpp>
+#  include <boost/iostreams/filter/zlib.hpp>
+# endif // !NBT_NO_BOOST
 
 namespace nbt {
 
@@ -849,6 +853,61 @@ end:
 	return std::move(ret.front());
 }
 
+# ifndef NBT_NO_BOOST
+NBT_PARSER_TEMPLATE_DECLARATION
+std::unique_ptr<_Node>
+parse_auto
+(	std::basic_istream<_In_char> &in
+,	_Allocator<_Node> __a = _Allocator<_Node>()
+)
+{
+	namespace io = boost::iostreams;
+	typename std::char_traits<_In_char>::int_type tmp;
+	switch (in.peek())
+	{
+	case 0x1F: // Maybe gzip
+		in.get();
+		tmp = in.peek();
+		in.unget();
+		if (tmp == 0x8B)
+		{ // Assume gzip
+			io::filtering_stream
+			<	io::input
+			,	_In_char
+			,	std::char_traits<_In_char>
+			,	std::allocator<_In_char>
+			,	io::public_
+			> filtered;
+			filtered.push(io::gzip_decompressor());
+			filtered.push(in);
+			return parse<_Policy, _Allocator, _Char, _Byte, _Short, _Int, _Long, _Float, _Double, _Byte_array, _String, _List, _Compound, _Int_array, _Long_array, _Byte_array_type, _String_type, _List_type, _Compound_type, _Int_array_type, _Long_array_type, _Node, _In_char>(filtered, __a);
+		}
+		else
+			break;
+	case 0x78: // Maybe zlib
+		in.get();
+		tmp = in.peek();
+		in.unget();
+		if (tmp == 0x01 || tmp == 0x9C || tmp == 0xDA)
+		{ // Assume zlib
+			io::filtering_stream
+			<	io::input
+			,	_In_char
+			,	std::char_traits<_In_char>
+			,	std::allocator<_In_char>
+			,	io::public_
+			> filtered;
+			filtered.push(io::zlib_decompressor());
+			filtered.push(in);
+			return parse<_Policy, _Allocator, _Char, _Byte, _Short, _Int, _Long, _Float, _Double, _Byte_array, _String, _List, _Compound, _Int_array, _Long_array, _Byte_array_type, _String_type, _List_type, _Compound_type, _Int_array_type, _Long_array_type, _Node, _In_char>(filtered, __a);
+		}
+		else
+			break;
+	}
+	return parse<_Policy, _Allocator, _Char, _Byte, _Short, _Int, _Long, _Float, _Double, _Byte_array, _String, _List, _Compound, _Int_array, _Long_array, _Byte_array_type, _String_type, _List_type, _Compound_type, _Int_array_type, _Long_array_type, _Node, _In_char>(in, __a);
+}
+# endif // !NBT_NO_BOOST
+
 NBT_PARSER_TEMPLATE_DECLARATION
 std::unique_ptr<_Node>
 parse_str
@@ -857,7 +916,11 @@ parse_str
 )
 {
 	std::istringstream iss(in);
+# ifndef NBT_NO_BOOST
+	return parse_auto
+# else
 	return parse
+# endif // !NBT_NO_BOOST
 	<	_Policy
 	,	_Allocator
 	,	_Char
@@ -892,7 +955,11 @@ parse_file
 )
 {
 	std::ifstream ifs(path, std::ios::binary);
+# ifndef NBT_NO_BOOST
+	return parse_auto
+# else
 	return parse
+# endif // !NBT_NO_BOOST
 	<	_Policy
 	,	_Allocator
 	,	_Char
