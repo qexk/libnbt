@@ -21,9 +21,11 @@
 # define NBT_PARSER_H_
 
 # include <algorithm>
+# include <fstream>
 # include <istream>
 # include <memory>
 # include <limits>
+# include <sstream>
 # include <stack>
 # include <string>
 # include <type_traits>
@@ -285,49 +287,52 @@ enum class parsing
 ,	no_implicit
 };
 
-template
-<	parsing _Policy = parsing::implicit_compound
-,	template <class> typename _Allocator = std::allocator
-,	typename _Char = char
-,	typename _Byte = std::int_least8_t
-,	typename _Short = std::int_least16_t
-,	typename _Int = std::int_least32_t
-,	typename _Long = std::int_least64_t
-,	typename _Float = float
-,	typename _Double = double
-,	template <class, class> typename _Byte_array = std::vector
-,	template <class, class, class> typename _String = std::basic_string
-,	template <class, class> typename _List = std::vector
-,	template <class, class, class, class, class>
-		typename _Compound = std::unordered_map
-,	template <class, class> typename _Int_array = std::vector
-,	template <class, class> typename _Long_array = std::vector
-,	typename _Byte_array_type = _Byte_array<_Byte, _Allocator<_Byte>>
-,	typename _String_type = _String
-	<	char
-	,	std::char_traits<char>
-	,	_Allocator<char>
-	>
-,	typename _List_type = _List
-	<	std::unique_ptr<void, void (*) (void *)>
-	,	_Allocator<std::unique_ptr<void, void (*) (void *)>>
-	>
-,	typename _Compound_type = _Compound
-	<	_String_type
-	,	std::unique_ptr<void, void (*) (void *)>
-	,	detail::integer_list_hash<_String_type>
-	,	std::equal_to<_String_type>
-	,	_Allocator<std::unique_ptr<void, void (*) (void *)>>
-	>
-,	typename _Int_array_type = _Int_array<_Int, _Allocator<_Int>>
-,	typename _Long_array_type = _Long_array<_Long, _Allocator<_Long>>
-,	typename _Node = std::variant
-	<	_Byte, _Short, _Int, _Long, _Float, _Double
-	,	_Byte_array_type, _String_type, _List_type, _Compound_type
-	,	_Int_array_type, _Long_array_type
-	>
-,	typename _In_char = char
+# define NBT_PARSER_TEMPLATE_DECLARATION                                   \
+template                                                                   \
+<	parsing _Policy = parsing::implicit_compound                       \
+,	template <class> typename _Allocator = std::allocator              \
+,	typename _Char = char                                              \
+,	typename _Byte = std::int_least8_t                                 \
+,	typename _Short = std::int_least16_t                               \
+,	typename _Int = std::int_least32_t                                 \
+,	typename _Long = std::int_least64_t                                \
+,	typename _Float = float                                            \
+,	typename _Double = double                                          \
+,	template <class, class> typename _Byte_array = std::vector         \
+,	template <class, class, class> typename _String = std::basic_string\
+,	template <class, class> typename _List = std::vector               \
+,	template <class, class, class, class, class>                       \
+		typename _Compound = std::unordered_map                    \
+,	template <class, class> typename _Int_array = std::vector          \
+,	template <class, class> typename _Long_array = std::vector         \
+,	typename _Byte_array_type = _Byte_array<_Byte, _Allocator<_Byte>>  \
+,	typename _String_type = _String                                    \
+	<	char                                                       \
+	,	std::char_traits<char>                                     \
+	,	_Allocator<char>                                           \
+	>                                                                  \
+,	typename _List_type = _List                                        \
+	<	std::unique_ptr<void, void (*) (void *)>                   \
+	,	_Allocator<std::unique_ptr<void, void (*) (void *)>>       \
+	>                                                                  \
+,	typename _Compound_type = _Compound                                \
+	<	_String_type                                               \
+	,	std::unique_ptr<void, void (*) (void *)>                   \
+	,	detail::integer_list_hash<_String_type>                    \
+	,	std::equal_to<_String_type>                                \
+	,	_Allocator<std::unique_ptr<void, void (*) (void *)>>       \
+	>                                                                  \
+,	typename _Int_array_type = _Int_array<_Int, _Allocator<_Int>>      \
+,	typename _Long_array_type = _Long_array<_Long, _Allocator<_Long>>  \
+,	typename _Node = std::variant                                      \
+	<	_Byte, _Short, _Int, _Long, _Float, _Double                \
+	,	_Byte_array_type, _String_type, _List_type, _Compound_type \
+	,	_Int_array_type, _Long_array_type                          \
+	>                                                                  \
+,	typename _In_char = char                                           \
 >
+
+NBT_PARSER_TEMPLATE_DECLARATION
 std::unique_ptr<_Node>
 parse
 (	std::basic_istream<_In_char> &in
@@ -844,6 +849,78 @@ end:
 	return std::move(ret.front());
 }
 
+NBT_PARSER_TEMPLATE_DECLARATION
+std::unique_ptr<_Node>
+parse_str
+(	std::string const &in
+,	_Allocator<_Node> __a = _Allocator<_Node>()
+)
+{
+	std::istringstream iss(in);
+	return parse
+	<	_Policy
+	,	_Allocator
+	,	_Char
+	,	_Byte
+	,	_Short
+	,	_Int
+	,	_Long
+	,	_Float
+	,	_Double
+	,	_Byte_array
+	,	_String
+	,	_List
+	,	_Compound
+	,	_Int_array
+	,	_Long_array
+	,	_Byte_array_type
+	,	_String_type
+	,	_List_type
+	,	_Compound_type
+	,	_Int_array_type
+	,	_Long_array_type
+	,	_Node
+	,	decltype(iss)::char_type
+	>(iss, __a);
+}
+
+NBT_PARSER_TEMPLATE_DECLARATION
+std::unique_ptr<_Node>
+parse_file
+(	std::string const &path
+,	_Allocator<_Node> __a = _Allocator<_Node>()
+)
+{
+	std::ifstream ifs(path, std::ios::binary);
+	return parse
+	<	_Policy
+	,	_Allocator
+	,	_Char
+	,	_Byte
+	,	_Short
+	,	_Int
+	,	_Long
+	,	_Float
+	,	_Double
+	,	_Byte_array
+	,	_String
+	,	_List
+	,	_Compound
+	,	_Int_array
+	,	_Long_array
+	,	_Byte_array_type
+	,	_String_type
+	,	_List_type
+	,	_Compound_type
+	,	_Int_array_type
+	,	_Long_array_type
+	,	_Node
+	,	decltype(ifs)::char_type
+	>(ifs, __a);
+}
+
 } // nbt
+
+# undef NBT_PARSER_TEMPLATE_DECLARATION
 
 #endif // !NBT_PARSER_H_

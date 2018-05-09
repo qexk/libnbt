@@ -36,7 +36,8 @@ CXXFLAGS		:=-W -Wall -Werror -pedantic -Wno-multichar
 SRCS			:=t/00-utilities/00-list_wrapper.t.cpp \
 			  t/00-utilities/01-compound_wrapper.t.cpp \
 			  t/01-parsing-no_implicit.t.cpp \
-			  t/02-parsing-implicit.t.cpp
+			  t/02-parsing-implicit.t.cpp \
+			  t/03-other-parse-functions.t.cpp
 
 .SUFFIXES:
 .SUFFIXES: .cpp .o
