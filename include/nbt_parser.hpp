@@ -41,6 +41,8 @@
 #  include <boost/iostreams/filter/zlib.hpp>
 # endif // !NBT_NO_BOOST
 
+# include "nbt_byteconverters.hpp"
+
 namespace nbt {
 
 namespace detail {
@@ -57,133 +59,6 @@ struct integer_list_hash
 		return seed;
 	}
 };
-
-template <typename _Char>
-static inline std::uint16_t
-b2tos16(_Char const *buf)
-{
-	union
-	{
-		std::uint8_t byte[2];
-		std::uint16_t val;
-	} conv;
-#if '\x11\x22\x33\x44' == 0x11'22'33'44
-	conv.byte[0] = static_cast<std::uint8_t>(buf[1] & 0xFF);
-	conv.byte[1] = static_cast<std::uint8_t>(buf[0] & 0xFF);
-#else
-	conv.byte[0] = static_cast<std::uint8_t>(buf[0] & 0xFF);
-	conv.byte[1] = static_cast<std::uint8_t>(buf[1] & 0xFF);
-#endif
-	return conv.val;
-}
-
-template <typename _Char>
-static inline std::uint32_t
-b4tos32(_Char const *buf)
-{
-	union
-	{
-		std::uint8_t byte[4];
-		std::uint32_t val;
-	} conv;
-#if '\x11\x22\x33\x44' == 0x11'22'33'44
-	conv.byte[0] = static_cast<std::uint8_t>(buf[3] & 0xFF);
-	conv.byte[1] = static_cast<std::uint8_t>(buf[2] & 0xFF);
-	conv.byte[2] = static_cast<std::uint8_t>(buf[1] & 0xFF);
-	conv.byte[3] = static_cast<std::uint8_t>(buf[0] & 0xFF);
-#else
-	conv.byte[0] = static_cast<std::uint8_t>(buf[0] & 0xFF);
-	conv.byte[1] = static_cast<std::uint8_t>(buf[1] & 0xFF);
-	conv.byte[2] = static_cast<std::uint8_t>(buf[2] & 0xFF);
-	conv.byte[3] = static_cast<std::uint8_t>(buf[3] & 0xFF);
-#endif
-	return conv.val;
-}
-
-template <typename _Char>
-static inline std::uint64_t
-b8tos64(_Char const *buf)
-{
-	union
-	{
-		std::uint8_t byte[8];
-		std::uint64_t val;
-	} conv;
-#if '\x11\x22\x33\x44' == 0x11'22'33'44
-	conv.byte[0] = static_cast<std::uint8_t>(buf[7] & 0xFF);
-	conv.byte[1] = static_cast<std::uint8_t>(buf[6] & 0xFF);
-	conv.byte[2] = static_cast<std::uint8_t>(buf[5] & 0xFF);
-	conv.byte[3] = static_cast<std::uint8_t>(buf[4] & 0xFF);
-	conv.byte[4] = static_cast<std::uint8_t>(buf[3] & 0xFF);
-	conv.byte[5] = static_cast<std::uint8_t>(buf[2] & 0xFF);
-	conv.byte[6] = static_cast<std::uint8_t>(buf[1] & 0xFF);
-	conv.byte[7] = static_cast<std::uint8_t>(buf[0] & 0xFF);
-#else
-	conv.byte[0] = static_cast<std::uint8_t>(buf[0] & 0xFF);
-	conv.byte[1] = static_cast<std::uint8_t>(buf[1] & 0xFF);
-	conv.byte[2] = static_cast<std::uint8_t>(buf[2] & 0xFF);
-	conv.byte[3] = static_cast<std::uint8_t>(buf[3] & 0xFF);
-	conv.byte[4] = static_cast<std::uint8_t>(buf[4] & 0xFF);
-	conv.byte[5] = static_cast<std::uint8_t>(buf[5] & 0xFF);
-	conv.byte[6] = static_cast<std::uint8_t>(buf[6] & 0xFF);
-	conv.byte[7] = static_cast<std::uint8_t>(buf[7] & 0xFF);
-#endif
-	return conv.val;
-}
-
-template <typename _Char>
-static inline float
-b4toflt(_Char const *buf)
-{
-	union
-	{
-		std::uint8_t byte[4];
-		float val;
-	} conv;
-#if '\x11\x22\x33\x44' == 0x11'22'33'44
-	conv.byte[0] = static_cast<std::uint8_t>(buf[3] & 0xFF);
-	conv.byte[1] = static_cast<std::uint8_t>(buf[2] & 0xFF);
-	conv.byte[2] = static_cast<std::uint8_t>(buf[1] & 0xFF);
-	conv.byte[3] = static_cast<std::uint8_t>(buf[0] & 0xFF);
-#else
-	conv.byte[0] = static_cast<std::uint8_t>(buf[0] & 0xFF);
-	conv.byte[1] = static_cast<std::uint8_t>(buf[1] & 0xFF);
-	conv.byte[2] = static_cast<std::uint8_t>(buf[2] & 0xFF);
-	conv.byte[3] = static_cast<std::uint8_t>(buf[3] & 0xFF);
-#endif
-	return conv.val;
-}
-
-template <typename _Char>
-static inline double
-b8todbl(_Char const *buf)
-{
-	union
-	{
-		std::uint8_t byte[8];
-		double val;
-	} conv;
-#if '\x11\x22\x33\x44' == 0x11'22'33'44
-	conv.byte[0] = static_cast<std::uint8_t>(buf[7] & 0xFF);
-	conv.byte[1] = static_cast<std::uint8_t>(buf[6] & 0xFF);
-	conv.byte[2] = static_cast<std::uint8_t>(buf[5] & 0xFF);
-	conv.byte[3] = static_cast<std::uint8_t>(buf[4] & 0xFF);
-	conv.byte[4] = static_cast<std::uint8_t>(buf[3] & 0xFF);
-	conv.byte[5] = static_cast<std::uint8_t>(buf[2] & 0xFF);
-	conv.byte[6] = static_cast<std::uint8_t>(buf[1] & 0xFF);
-	conv.byte[7] = static_cast<std::uint8_t>(buf[0] & 0xFF);
-#else
-	conv.byte[0] = static_cast<std::uint8_t>(buf[0] & 0xFF);
-	conv.byte[1] = static_cast<std::uint8_t>(buf[1] & 0xFF);
-	conv.byte[2] = static_cast<std::uint8_t>(buf[2] & 0xFF);
-	conv.byte[3] = static_cast<std::uint8_t>(buf[3] & 0xFF);
-	conv.byte[4] = static_cast<std::uint8_t>(buf[4] & 0xFF);
-	conv.byte[5] = static_cast<std::uint8_t>(buf[5] & 0xFF);
-	conv.byte[6] = static_cast<std::uint8_t>(buf[6] & 0xFF);
-	conv.byte[7] = static_cast<std::uint8_t>(buf[7] & 0xFF);
-#endif
-	return conv.val;
-}
 
 enum class state
 {	S
