@@ -60,37 +60,6 @@ struct integer_list_hash
 	}
 };
 
-enum class state
-{	S
-,	S1, S2, S3, S4, S5, S6, S7, S8, S9, SA, SB, SC
-,	S7A, S8A, S9A, SBA, SCA
-,	S9B, SAB
-,	NTS, NT
-,	F
-};
-
-template <typename _In_char>
-static inline state
-state_of_tag(_In_char const tag)
-{
-	switch (static_cast<unsigned>(tag))
-	{
-	case 0x01U: return state::S1;
-	case 0x02U: return state::S2;
-	case 0x03U: return state::S3;
-	case 0x04U: return state::S4;
-	case 0x05U: return state::S5;
-	case 0x06U: return state::S6;
-	case 0x07U: return state::S7;
-	case 0x08U: return state::S8;
-	case 0x09U: return state::S9;
-	case 0x0AU: return state::SA;
-	case 0x0BU: return state::SB;
-	case 0x0CU: return state::SC;
-	default:   return state::F;
-	}
-}
-
 template
 <	class _Key_real
 ,	class _Value
@@ -159,6 +128,46 @@ NBT_HAS__BUILDER_( reserve );
 NBT_HAS__BUILDER_( try_emplace );
 
 # undef NBT_HAS__BUILDER_
+
+enum class state
+{	_1, S1
+,	_2, S2
+,	_3, S3
+,	_4, S4
+,	_5, S5
+,	_6, S6
+,	_7, S7, S7A
+,	_8, S8, S8A
+,	_9, S9, S9A, S9B
+,	_A, SA, SAA, NT, SAB, SAEND
+,	_B, SB, SBA
+,	_C, SC, SCA
+,	S, NTS // these states are parser-only
+,	F
+};
+
+template <typename _In_char>
+static inline state
+state_of_tag(_In_char const tag)
+{
+	switch (static_cast<unsigned>(tag))
+	{
+	case 0x01U: return state::S1;
+	case 0x02U: return state::S2;
+	case 0x03U: return state::S3;
+	case 0x04U: return state::S4;
+	case 0x05U: return state::S5;
+	case 0x06U: return state::S6;
+	case 0x07U: return state::S7;
+	case 0x08U: return state::S8;
+	case 0x09U: return state::S9;
+	case 0x0AU: return state::SA;
+	case 0x0BU: return state::SB;
+	case 0x0CU: return state::SC;
+	default:    return state::F;
+	}
+}
+
 } // detail
 
 enum class parsing
@@ -237,57 +246,57 @@ parse
 	using detail::state;
 	using _Byte_to_case = detail::default_map
 	<	typename _In_traits::int_type
-	,	int
+	,	state
 	>;
-	std::unordered_map<state, _Byte_to_case> const trans
-	 = {	{ state::F, {{ _In_traits::eof(), '0' }} }
+	std::unordered_map<state, _Byte_to_case> const trans =
+	{	{ state::F, {{ _In_traits::eof(), state::F }} }
 	,	{	state::S
-		,	{	{ tag_byt,  '1' }
-			,	{ tag_sht,  '2' }
-			,	{ tag_int,  '3' }
-			,	{ tag_lng,  '4' }
-			,	{ tag_flt,  '5' }
-			,	{ tag_dbl,  '6' }
-			,	{ tag_bya,  '7' }
-			,	{ tag_str,  '8' }
-			,	{ tag_lst,  '9' }
-			,	{ tag_cpd,  'A' }
-			,	{ tag_ina,  'B' }
-			,	{ tag_lna,  'C' }
+		,	{	{ tag_byt, state::_1 }
+			,	{ tag_sht, state::_2 }
+			,	{ tag_int, state::_3 }
+			,	{ tag_lng, state::_4 }
+			,	{ tag_flt, state::_5 }
+			,	{ tag_dbl, state::_6 }
+			,	{ tag_bya, state::_7 }
+			,	{ tag_str, state::_8 }
+			,	{ tag_lst, state::_9 }
+			,	{ tag_cpd, state::_A }
+			,	{ tag_ina, state::_B }
+			,	{ tag_lna, state::_C }
 			}
 		}
+	,	{ state::S1,  {{ detail::_, state::S1  }} }
+	,	{ state::S2,  {{ detail::_, state::S2  }} }
+	,	{ state::S3,  {{ detail::_, state::S3  }} }
+	,	{ state::S4,  {{ detail::_, state::S4  }} }
+	,	{ state::S5,  {{ detail::_, state::S5  }} }
+	,	{ state::S6,  {{ detail::_, state::S6  }} }
+	,	{ state::S7,  {{ detail::_, state::S7  }} }
+	,	{ state::S7A, {{ detail::_, state::S7A }} }
+	,	{ state::S8,  {{ detail::_, state::S8  }} }
+	,	{ state::S8A, {{ detail::_, state::S8A }} }
+	,	{ state::S9,  {{ detail::_, state::S9  }} }
+	,	{ state::S9A, {{ detail::_, state::S9A }} }
+	,	{ state::S9B, {{ detail::_, state::S9B }} }
+	,	{ state::SA,  {{ detail::_, state::SA  }} }
+	,	{ state::SAA, {{ detail::_, state::SAB }} }
+	,	{ state::SB,  {{ detail::_, state::SB  }} }
+	,	{ state::SBA, {{ detail::_, state::SBA }} }
+	,	{ state::SC,  {{ detail::_, state::SC  }} }
+	,	{ state::SCA, {{ detail::_, state::SCA }} }
+	,	{ state::NT,  {{ detail::_, state::NT  }} }
 	,	{	state::NTS
 		,	_Policy == parsing::implicit_compound
 			?	_Byte_to_case
-				{	{ tag_nul,  'AE' }
-				,	{ _In_traits::eof(), '0' }
-				,	{ detail::_, 'AB' }
+				{	{ tag_nul,           state::SAEND }
+				,	{ _In_traits::eof(), state::F     }
+				,	{ detail::_,         state::SAA   }
 				}
 			:	_Byte_to_case
-				{	{ tag_nul,  'AE' }
-				,	{ detail::_, 'AB' }
+				{	{ tag_nul,   state::SAEND }
+				,	{ detail::_, state::SAA   }
 				}
 		}
-	,	{ state::S1,  {{ detail::_, '1A' }} }
-	,	{ state::S2,  {{ detail::_, '2A' }} }
-	,	{ state::S3,  {{ detail::_, '3A' }} }
-	,	{ state::S4,  {{ detail::_, '4A' }} }
-	,	{ state::S5,  {{ detail::_, '5A' }} }
-	,	{ state::S6,  {{ detail::_, '6A' }} }
-	,	{ state::S7,  {{ detail::_, '7A' }} }
-	,	{ state::S7A, {{ detail::_, '7B' }} }
-	,	{ state::S8,  {{ detail::_, '8A' }} }
-	,	{ state::S8A, {{ detail::_, '8B' }} }
-	,	{ state::S9,  {{ detail::_, '9A' }} }
-	,	{ state::S9A, {{ detail::_, '9B' }} }
-	,	{ state::S9B, {{ detail::_, '9C' }} }
-	,	{ state::SA,  {{ detail::_, 'AA' }} }
-	,	{ state::NT,  {{ detail::_, 'NT' }} }
-	,	{ state::SAB, {{ detail::_, 'AC' }} }
-	,	{ state::SB,  {{ detail::_, 'BA' }} }
-	,	{ state::SBA, {{ detail::_, 'BB' }} }
-	,	{ state::SC,  {{ detail::_, 'CA' }} }
-	,	{ state::SCA, {{ detail::_, 'CB' }} }
 	};
 
 	auto deleter = [] (void *ptr_raw) {
@@ -312,12 +321,12 @@ parse
 loop:
 	switch (trans.at(ss.top()).at(in.peek()))
 	{
-	case '1':
+	case state::_1:
 		in.get();
 		ss.pop();
 		ss.push(state::S1);
 		goto loop;
-	case '1A':
+	case state::S1:
 		{
 			_Node *node = _A::allocate(__a, 1);
 			_A::construct
@@ -328,12 +337,12 @@ loop:
 			ss.pop();
 			goto loop;
 		}
-	case '2':
+	case state::_2:
 		in.get();
 		ss.pop();
 		ss.push(state::S2);
 		goto loop;
-	case '2A':
+	case state::S2:
 		{
 			_In_char buf[2];
 			in.read(buf, sizeof(buf));
@@ -346,12 +355,12 @@ loop:
 			ss.pop();
 			goto loop;
 		}
-	case '3':
+	case state::_3:
 		in.get();
 		ss.pop();
 		ss.push(state::S3);
 		goto loop;
-	case '3A':
+	case state::S3:
 		{
 			_In_char buf[4];
 			in.read(buf, sizeof(buf));
@@ -364,12 +373,12 @@ loop:
 			ss.pop();
 			goto loop;
 		}
-	case '4':
+	case state::_4:
 		in.get();
 		ss.pop();
 		ss.push(state::S4);
 		goto loop;
-	case '4A':
+	case state::S4:
 		{
 			_In_char buf[8];
 			in.read(buf, sizeof(buf));
@@ -382,12 +391,12 @@ loop:
 			ss.pop();
 			goto loop;
 		}
-	case '5':
+	case state::_5:
 		in.get();
 		ss.pop();
 		ss.push(state::S5);
 		goto loop;
-	case '5A':
+	case state::S5:
 		{
 			_In_char buf[4];
 			in.read(buf, sizeof(buf));
@@ -400,12 +409,12 @@ loop:
 			ss.pop();
 			goto loop;
 		}
-	case '6':
+	case state::_6:
 		in.get();
 		ss.pop();
 		ss.push(state::S6);
 		goto loop;
-	case '6A':
+	case state::S6:
 		{
 			_In_char buf[8];
 			in.read(buf, sizeof(buf));
@@ -418,17 +427,17 @@ loop:
 			ss.pop();
 			goto loop;
 		}
-	case '7':
+	case state::_7:
 		in.get();
 		ss.pop();
 		ss.push(state::S7);
 		goto loop;
-	case '7A':
+	case state::S7:
 		ss.pop();
 		ss.push(state::S7A);
 		ss.push(state::S3);
 		goto loop;
-	case '7B':
+	case state::S7A:
 		{
 			_Byte_array_type cont;
 			auto const len = *std::get_if<2>(ret.front().get());
@@ -460,17 +469,17 @@ loop:
 			ss.pop();
 			goto loop;
 		}
-	case '8':
+	case state::_8:
 		in.get();
 		ss.pop();
 		ss.push(state::S8);
 		goto loop;
-	case '8A':
+	case state::S8:
 		ss.pop();
 		ss.push(state::S8A);
 		ss.push(state::S2);
 		goto loop;
-	case '8B':
+	case state::S8A:
 		{
 			std::size_t const len
 				 = *std::get_if<1>(ret.front().get());
@@ -493,12 +502,12 @@ loop:
 			ss.pop();
 			goto loop;
 		}
-	case '9':
+	case state::_9:
 		in.get();
 		ss.pop();
 		ss.push(state::S9);
 		goto loop;
-	case '9A':
+	case state::S9:
 		{
 			_Node * const node = _A::allocate(__a, 1);
 			_A::construct
@@ -512,7 +521,7 @@ loop:
 			ss.push(state::S1);
 			goto loop;
 		}
-	case '9B':
+	case state::S9A:
 		{
 			auto const count
 				 = *std::get_if<2>(ret.front().get());
@@ -534,7 +543,7 @@ loop:
 			}
 			goto loop;
 		}
-	case '9C':
+	case state::S9B:
 		{
 			auto &count = std::get<2>(*ret[1]);
 			auto const tag = *std::get_if<0>(ret[2].get());
@@ -558,12 +567,12 @@ loop:
 			}
 			goto loop;
 		}
-	case 'A':
+	case state::_A:
 		in.get();
 		ss.pop();
 		ss.push(state::SA);
 		goto loop;
-	case 'AA':
+	case state::SA:
 		{
 			_Node * const node = _A::allocate(__a, 1);
 			_A::construct
@@ -575,21 +584,21 @@ loop:
 			ss.push(state::NTS);
 			goto loop;
 		}
-	case 'AB':
+	case state::SAA:
 		ss.pop();
 		ss.push(state::NT);
 		ss.push(state::S8);
 		ss.push(state::S1);
 		goto loop;
-	case 'NT':
+	case state::NT:
 		{
 			auto const tag = *std::get_if<0>(ret[1].get());
 			ss.pop();
-			ss.push(state::SAB);
+			ss.push(state::SAA);
 			ss.push(detail::state_of_tag(tag));
 			goto loop;
 		}
-	case 'AC':
+	case state::SAB:
 		{
 			if constexpr
 			(	detail::has_try_emplace<_Compound_type>
@@ -623,21 +632,21 @@ loop:
 			ss.push(state::NTS);
 			goto loop;
 		}
-	case 'AE':
+	case state::SAEND:
 		in.get();
 		ss.pop();
 		goto loop;
-	case 'B':
+	case state::_B:
 		in.get();
 		ss.pop();
 		ss.push(state::SB);
 		goto loop;
-	case 'BA':
+	case state::SB:
 		ss.pop();
 		ss.push(state::SBA);
 		ss.push(state::S3);
 		goto loop;
-	case 'BB':
+	case state::SBA:
 		{
 			auto const count
 				= *std::get_if<2>(ret.front().get());
@@ -674,17 +683,17 @@ loop:
 			ss.pop();
 			goto loop;
 		}
-	case 'C':
+	case state::_C:
 		in.get();
 		ss.pop();
 		ss.push(state::SC);
 		goto loop;
-	case 'CA':
+	case state::SC:
 		ss.pop();
 		ss.push(state::SCA);
 		ss.push(state::S3);
 		goto loop;
-	case 'CB':
+	case state::SCA:
 		{
 			auto const count
 				= *std::get_if<2>(ret.front().get());
@@ -721,7 +730,9 @@ loop:
 			ss.pop();
 			goto loop;
 		}
-	case '0':
+	case state::S:
+	case state::NTS:
+	case state::F:
 		goto end;
 	}
 end:
@@ -796,28 +807,7 @@ parse_str
 # else
 	return parse
 # endif // !NBT_NO_BOOST
-	<	_Policy
-	,	_Allocator
-	,	_Char
-	,	_Byte
-	,	_Short
-	,	_Int
-	,	_Long
-	,	_Float
-	,	_Double
-	,	_Byte_array
-	,	_String
-	,	_List
-	,	_Compound
-	,	_Int_array
-	,	_Long_array
-	,	_Byte_array_type
-	,	_String_type
-	,	_List_type
-	,	_Compound_type
-	,	_Int_array_type
-	,	_Long_array_type
-	,	_Node
+	<	_Policy, _Allocator, _Char, _Byte, _Short, _Int, _Long, _Float, _Double, _Byte_array, _String, _List, _Compound, _Int_array, _Long_array, _Byte_array_type, _String_type, _List_type, _Compound_type, _Int_array_type, _Long_array_type, _Node
 	,	decltype(iss)::char_type
 	>(iss, __a);
 }
@@ -835,28 +825,7 @@ parse_file
 # else
 	return parse
 # endif // !NBT_NO_BOOST
-	<	_Policy
-	,	_Allocator
-	,	_Char
-	,	_Byte
-	,	_Short
-	,	_Int
-	,	_Long
-	,	_Float
-	,	_Double
-	,	_Byte_array
-	,	_String
-	,	_List
-	,	_Compound
-	,	_Int_array
-	,	_Long_array
-	,	_Byte_array_type
-	,	_String_type
-	,	_List_type
-	,	_Compound_type
-	,	_Int_array_type
-	,	_Long_array_type
-	,	_Node
+	<	_Policy, _Allocator, _Char, _Byte, _Short, _Int, _Long, _Float, _Double, _Byte_array, _String, _List, _Compound, _Int_array, _Long_array, _Byte_array_type, _String_type, _List_type, _Compound_type, _Int_array_type, _Long_array_type, _Node
 	,	decltype(ifs)::char_type
 	>(ifs, __a);
 }
